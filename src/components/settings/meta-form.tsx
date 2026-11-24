@@ -89,7 +89,7 @@ export function MetaForm({
           <ol className="flex list-decimal flex-col gap-1 pl-5">
             <li>
               เปิด{" "}
-              <a className="text-brand underline" href="https://business.facebook.com/events_manager2" target="_blank" rel="noreferrer">
+              <a className="link" href="https://business.facebook.com/events_manager2" target="_blank" rel="noreferrer">
                 Events Manager
               </a>{" "}
               ด้วยบัญชีที่เป็นผู้ดูแล Business ของบริษัท

@@ -24,7 +24,7 @@ export async function MonthStats() {
           const diff = now - last;
           return (
             <li key={r.metric} className="flex flex-col rounded-control bg-bg p-3">
-              <span className="text-sm text-ink-soft">{LABEL[r.metric] ?? r.metric}</span>
+              <span className="lbl">{LABEL[r.metric] ?? r.metric}</span>
               <span className="text-2xl font-semibold">{now.toLocaleString("th-TH")}</span>
               <span className="text-xs text-ink-soft">
                 เดือนก่อน {last.toLocaleString("th-TH")}

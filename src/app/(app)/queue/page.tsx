@@ -3,7 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge, Card, EmptyState, Notice, PageTitle, StageBadge } from "@/components/ui/card";
-import { Select } from "@/components/ui/field";
+import { Avatar } from "@/components/ui/avatar";
+import { FormSelect } from "@/components/ui/form-select";
 import { StatusTabs } from "@/components/ui/status-tabs";
 import { Tooltip } from "@/components/ui/tooltip";
 import { requireMe } from "@/lib/auth";
@@ -142,7 +143,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
       {want("users") && pending.length > 0 && (
         <section className="flex flex-col gap-2">
           <h2 className="text-lg font-semibold">ผู้ใช้รออนุมัติ</h2>
-          <div className="grid items-start gap-2 lg:grid-cols-2 2xl:grid-cols-3">
+          <div className="grid grid-cols-1 items-start gap-2 lg:grid-cols-2 2xl:grid-cols-3">
             {pending.map((u) => (
               <ApproveCard key={u.id} user={u} projects={projects} />
             ))}
@@ -163,7 +164,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
               >
                 <div className="flex min-w-0 items-start justify-between gap-2 md:flex-1 md:justify-start">
                   <div className="min-w-0">
-                    <Link href={`/leads/${l.id}`} className="font-medium underline-offset-2 hover:underline">
+                    <Link href={`/leads/${l.id}`} className="link">
                       {l.full_name}
                     </Link>
                     <p className="text-sm text-ink-soft">
@@ -177,22 +178,20 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
                 ) : (
                   <form action={assignLead} className="flex flex-col gap-2 sm:flex-row md:shrink-0">
                     <input type="hidden" name="lead_id" value={l.id} />
-                    <Select
+                    <FormSelect
                       name="owner_id"
                       required
                       defaultValue=""
                       aria-label={`เลือกเซลส์ให้ ${l.full_name}`}
+                      placeholder={`เลือกเซลส์ของ ${project}`}
+                      searchPlaceholder="ค้นหาชื่อ"
                       className="md:w-60"
-                    >
-                      <option value="" disabled>
-                        เลือกเซลส์ของ {project}
-                      </option>
-                      {choices.map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.full_name || u.email}
-                        </option>
-                      ))}
-                    </Select>
+                      options={choices.map((u) => ({
+                        id: u.id,
+                        label: u.full_name || u.email,
+                        icon: <Avatar name={u.full_name || u.email} url={u.avatar_url} size="sm" />,
+                      }))}
+                    />
                     <Button type="submit" className="sm:shrink-0">
                       มอบหมายลีด
                     </Button>
@@ -219,7 +218,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
           </div>
           <p className="text-sm text-ink-soft">
             ถ้าขึ้นซ้ำทุกครั้ง ตรวจ Pixel ID และ token ที่{" "}
-            <Link href="/settings" className="text-brand underline">
+            <Link href="/settings" className="link">
               หน้าตั้งค่า
             </Link>
           </p>
@@ -229,7 +228,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
               className="flex flex-col gap-1 p-3 md:flex-row md:items-center md:justify-between md:gap-4 md:px-4"
             >
               <div className="flex min-w-0 flex-col gap-0.5 md:flex-1">
-                <p className="font-medium">
+                <p>
                   {e.event_name} · {one(e.leads)?.full_name ?? "-"}
                 </p>
                 <Tooltip text={e.error} onlyWhenClipped>

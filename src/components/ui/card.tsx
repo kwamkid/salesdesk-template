@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { getTabColor } from "@/lib/status-colors";
 import type { HTMLAttributes, ReactNode } from "react";
 import { stageOf, type StageTone } from "@/config/stages";
 
@@ -13,9 +14,19 @@ const PAD: Record<CardPadding, string> = {
 
 /** Surface card, like aoocommerce's Card: 1px border, small shadow, 8px corners.
  *  A `p-*` in className replaces the preset padding. */
-export function Card({ className = "", padding = "md", flat, ...rest }: HTMLAttributes<HTMLDivElement> & { padding?: CardPadding; flat?: boolean }) {
+export function Card({
+  className = "",
+  padding = "md",
+  flat,
+  ...rest
+}: HTMLAttributes<HTMLDivElement> & { padding?: CardPadding; flat?: boolean }) {
   const pad = /(^|\s)p-\d/.test(className) ? "" : PAD[padding];
-  return <div className={`rounded-card border border-line bg-surface ${flat ? "" : "shadow-card"} ${pad} ${className}`} {...rest} />;
+  return (
+    <div
+      className={`rounded-card border border-line bg-surface ${flat ? "" : "shadow-card"} ${pad} ${className}`}
+      {...rest}
+    />
+  );
 }
 
 const TONE: Record<StageTone, string> = {
@@ -27,21 +38,39 @@ const TONE: Record<StageTone, string> = {
 };
 
 /** Small pill. Status is never shown by color alone, so it always carries text. */
-export function Badge({ tone = "neutral", children }: { tone?: StageTone; children: ReactNode }) {
+export function Badge({
+  tone = "neutral",
+  children,
+}: {
+  tone?: StageTone;
+  children: ReactNode;
+}) {
   return (
-    <span className={`inline-flex h-6 shrink-0 items-center rounded-full px-2 text-xs font-medium whitespace-nowrap ${TONE[tone]}`}>
+    <span
+      className={`inline-flex h-6 shrink-0 items-center rounded-full px-2 text-xs font-medium whitespace-nowrap ${TONE[tone]}`}
+    >
       {children}
     </span>
   );
 }
 
+/** A customer's stage, everywhere: same colours as the stage tabs and the funnel (src/lib/status-colors.ts),
+ *  readable size (14px), the meaning of the stage on hover is left to the tabs. */
 export function StageBadge({ stage }: { stage: string }) {
   const s = stageOf(stage);
-  return <Badge tone={s.tone}>{s.label}</Badge>;
+  const c = getTabColor(stage);
+  return (
+    <span
+      className={`inline-flex min-h-7 shrink-0 items-center rounded-full px-3 text-sm font-medium whitespace-nowrap ${c.inactive} ${c.labelColor}`}
+    >
+      {s.label}
+    </span>
+  );
 }
 
 /** Soft tints for icon badges and stat tiles: a -soft background with its matching text color. */
-export type SoftTone = "brand" | "ok" | "warn" | "danger" | "info" | "purple" | "neutral";
+export type SoftTone =
+  "brand" | "ok" | "warn" | "danger" | "info" | "purple" | "neutral";
 
 export const SOFT: Record<SoftTone, string> = {
   brand: "bg-brand-soft text-brand",
@@ -63,7 +92,15 @@ const BADGE_SIZE = {
 };
 
 /** Icon on a tinted square (or circle at lg). Decorative: the text next to it carries the meaning. */
-export function IconBadge({ icon: Icon, tone = "brand", size = "sm" }: { icon: LucideIcon; tone?: SoftTone; size?: keyof typeof BADGE_SIZE }) {
+export function IconBadge({
+  icon: Icon,
+  tone = "brand",
+  size = "sm",
+}: {
+  icon: LucideIcon;
+  tone?: SoftTone;
+  size?: keyof typeof BADGE_SIZE;
+}) {
   return (
     <span
       aria-hidden
@@ -152,24 +189,41 @@ export function EmptyState({
         <p className="text-lg font-semibold text-ink">{title}</p>
         {hint && <p className="text-sm text-ink-soft">{hint}</p>}
       </div>
-      {action && <div className="mt-1 flex flex-wrap justify-center gap-2">{action}</div>}
+      {action && (
+        <div className="mt-1 flex flex-wrap justify-center gap-2">{action}</div>
+      )}
     </div>
   );
 }
 
 export function Loading({ label = "กำลังโหลด" }: { label?: string }) {
   return (
-    <div role="status" className="flex items-center justify-center gap-2 p-8 text-sm text-ink-soft">
-      <span className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-brand" aria-hidden />
+    <div
+      role="status"
+      className="flex items-center justify-center gap-2 p-8 text-sm text-ink-soft"
+    >
+      <span
+        className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-brand"
+        aria-hidden
+      />
       {label}
     </div>
   );
 }
 
 /** Result message at the top of a form or page. */
-export function Notice({ tone = "ok", children }: { tone?: "ok" | "warn" | "danger"; children: ReactNode }) {
+export function Notice({
+  tone = "ok",
+  children,
+}: {
+  tone?: "ok" | "warn" | "danger";
+  children: ReactNode;
+}) {
   return (
-    <p role="status" className={`rounded-control px-3 py-2 text-sm ${TONE[tone]}`}>
+    <p
+      role="status"
+      className={`rounded-control px-3 py-2 text-sm ${TONE[tone]}`}
+    >
       {children}
     </p>
   );
@@ -177,17 +231,37 @@ export function Notice({ tone = "ok", children }: { tone?: "ok" | "warn" | "dang
 
 /** Page header, like aoocommerce's PageHeader: (icon) + big bold title + subtitle, buttons on the right.
  *  Buttons share the title's line while the title keeps 14rem; otherwise they wrap below. */
-export function PageTitle({ title, sub, action, icon }: { title: string; sub?: string; action?: ReactNode; icon?: ReactNode }) {
+export function PageTitle({
+  title,
+  sub,
+  action,
+  icon,
+}: {
+  title: string;
+  sub?: string;
+  action?: ReactNode;
+  icon?: ReactNode;
+}) {
   return (
     <header className="flex min-w-0 flex-wrap items-start justify-between gap-x-3 gap-y-4">
       <div className="flex min-w-0 flex-[1_1_14rem] items-start gap-3">
-        {icon && <div className="flex h-10 shrink-0 items-center text-brand [&>svg]:h-8 [&>svg]:w-8">{icon}</div>}
+        {icon && (
+          <div className="flex h-10 shrink-0 items-center text-brand [&>svg]:h-8 [&>svg]:w-8">
+            {icon}
+          </div>
+        )}
         <div className="min-w-0">
-          <h1 className="text-page font-bold break-words text-ink sm:text-page-lg">{title}</h1>
+          <h1 className="text-page font-bold break-words text-ink sm:text-page-lg">
+            {title}
+          </h1>
           {sub && <p className="mt-1 text-ink-soft">{sub}</p>}
         </div>
       </div>
-      {action && <div className="flex max-w-full shrink-0 flex-wrap items-center gap-2">{action}</div>}
+      {action && (
+        <div className="flex max-w-full shrink-0 flex-wrap items-center gap-2">
+          {action}
+        </div>
+      )}
     </header>
   );
 }

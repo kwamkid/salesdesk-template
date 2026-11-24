@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { setUnitStatus } from "@/app/(app)/plots/actions";
 import { HouseModelPicture } from "@/components/projects/house-model-picture";
 import type { HouseModel } from "@/components/projects/load";
@@ -10,6 +10,7 @@ import { Badge, Notice } from "@/components/ui/card";
 import { ConfirmCard, Sheet } from "@/components/ui/confirm-card";
 import { Input } from "@/components/ui/field";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
+import { InfoList, type InfoItem } from "@/components/ui/info-list";
 import type { Role } from "@/config/roles";
 import { houseCategoryOf } from "@/config/houses";
 import { STAGES, stageOf } from "@/config/stages";
@@ -96,7 +97,7 @@ function CustomerChooser({
                 onClick={() => onPick(l)}
               >
                 <span className="min-w-0">
-                  <span className="block truncate font-medium">{l.full_name}</span>
+                  <span className="block truncate">{l.full_name}</span>
                   <span className="block text-sm text-ink-soft">{l.phone}</span>
                 </span>
                 <Badge tone={stageOf(l.stage).tone}>{stageOf(l.stage).label}</Badge>
@@ -191,7 +192,7 @@ export function UnitSheet({
       }
     });
 
-  const rows: { label: string; value: ReactNode }[] = [
+  const rows: InfoItem[] = [
     { label: "โซน / เฟส", value: unit.zone || "-" },
     ...(unit.model_name ? [] : [{ label: "แบบบ้าน", value: unit.house_type || "-" }]),
     { label: "ที่ดิน", value: unit.land_sqw === null ? "-" : `${num(unit.land_sqw)} ตร.ว.` },
@@ -252,14 +253,7 @@ export function UnitSheet({
               </div>
             </div>
           )}
-          <dl className="flex flex-col gap-2">
-            {rows.map((r) => (
-              <div key={r.label} className="flex justify-between gap-4 border-b border-line pb-2 text-sm">
-                <dt className="text-ink-soft">{r.label}</dt>
-                <dd className="text-right font-medium">{r.value}</dd>
-              </div>
-            ))}
-          </dl>
+          <InfoList layout="rows" items={rows} />
 
           {role === "executive" && <p className="text-sm text-ink-soft">ผู้บริหารดูได้อย่างเดียว</p>}
 

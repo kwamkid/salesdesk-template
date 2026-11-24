@@ -1,5 +1,6 @@
 "use client";
 
+import { startNav } from "@/components/shell/nav-progress";
 import { usePathname, useRouter } from "next/navigation";
 import { useId, useTransition } from "react";
 import { FormSelect } from "@/components/ui/form-select";
@@ -22,7 +23,10 @@ export function ProjectSwitcher({ projects, value }: { projects: ProjectOption[]
         id={id}
         value={value}
         disabled={pending}
-        onChange={(v) => start(() => router.replace(`${pathname}?project=${v}`))}
+        onChange={(v) => {
+          startNav();
+          start(() => router.replace(`${pathname}?project=${v}`));
+        }}
         options={projects.map((p) => ({ id: p.id, label: p.name, subtitle: p.is_open ? undefined : "ปิดการขาย" }))}
       />
     </div>

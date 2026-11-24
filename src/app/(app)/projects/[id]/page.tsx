@@ -78,7 +78,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <Badge tone={p.is_open ? "ok" : "neutral"}>{p.is_open ? "เปิดขาย" : "ปิดการขาย"}</Badge>
               {p.fb_page && (
-                <a href={p.fb_page} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center text-sm text-brand underline">
+                <a href={p.fb_page} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center link">
                   เพจ Facebook
                 </a>
               )}

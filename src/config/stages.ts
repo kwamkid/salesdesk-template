@@ -14,16 +14,16 @@ export type StageKey =
 
 export type StageTone = "neutral" | "brand" | "warn" | "ok" | "danger";
 
-export const STAGES: { key: StageKey; label: string; tone: StageTone; open: boolean }[] = [
-  { key: "new", label: "ลีดใหม่", tone: "neutral", open: true },
-  { key: "qualified", label: "ลีดคุณภาพ", tone: "brand", open: true },
-  { key: "appointment", label: "นัดชมโครงการ", tone: "warn", open: true },
-  { key: "visited", label: "มาชมแล้ว", tone: "warn", open: true },
-  { key: "reserved", label: "จอง", tone: "ok", open: true },
-  { key: "contracted", label: "ทำสัญญา", tone: "ok", open: true },
-  { key: "transferred", label: "โอน", tone: "ok", open: false },
-  { key: "lost", label: "ไม่ซื้อ", tone: "danger", open: false },
-  { key: "unqualified", label: "ไม่มีคุณภาพ", tone: "danger", open: false },
+export const STAGES: { key: StageKey; label: string; tone: StageTone; open: boolean; hint: string }[] = [
+  { key: "new", label: "ลีดใหม่", tone: "neutral", open: true, hint: "เพิ่งได้ชื่อกับเบอร์ ยังไม่ได้คุยกันจริง" },
+  { key: "qualified", label: "ลีดคุณภาพ", tone: "brand", open: true, hint: "คุยแล้ว สนใจจริง และงบถึง" },
+  { key: "appointment", label: "นัดชมโครงการ", tone: "warn", open: true, hint: "มีวันนัดมาดูโครงการแล้ว" },
+  { key: "visited", label: "มาชมแล้ว", tone: "warn", open: true, hint: "มาดูโครงการแล้ว (เช็กอินหน้างาน)" },
+  { key: "reserved", label: "จอง", tone: "ok", open: true, hint: "วางเงินจองแล้ว" },
+  { key: "contracted", label: "ทำสัญญา", tone: "ok", open: true, hint: "เซ็นสัญญาจะซื้อจะขายแล้ว" },
+  { key: "transferred", label: "โอน", tone: "ok", open: false, hint: "โอนกรรมสิทธิ์แล้ว ปิดการขาย" },
+  { key: "lost", label: "ไม่ซื้อ", tone: "danger", open: false, hint: "คุยแล้วแต่ไม่ซื้อ (มีเหตุผลกำกับ)" },
+  { key: "unqualified", label: "ไม่มีคุณภาพ", tone: "danger", open: false, hint: "เบอร์ผิด ไม่สนใจ หรืองบไม่ถึง" },
 ];
 
 export const stageOf = (key: string) => STAGES.find((s) => s.key === key) ?? STAGES[0];

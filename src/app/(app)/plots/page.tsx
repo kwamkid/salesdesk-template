@@ -7,6 +7,7 @@ import { loadHouseModels } from "@/components/projects/load";
 import { EmptyState, PageTitle } from "@/components/ui/card";
 import { buttonClass } from "@/components/ui/button";
 import { requireMe } from "@/lib/auth";
+import { scopeProjectId } from "@/lib/project-scope";
 import { ProjectIcon } from "@/lib/icons";
 import { createClient } from "@/lib/supabase/server";
 
@@ -43,7 +44,8 @@ export default async function PlotsPage({ searchParams }: { searchParams: Search
     );
   }
 
-  const wanted = one(sp.project);
+  // ?project= (shared link) wins, then the project picked in the left menu.
+  const wanted = one(sp.project) ?? (await scopeProjectId(me.role));
   const project = projects.find((p) => p.id === wanted) ?? projects.find((p) => p.is_open) ?? projects[0];
   const [units, plans, models] = await Promise.all([
     loadBoard(supabase, project.id),
@@ -64,7 +66,8 @@ export default async function PlotsPage({ searchParams }: { searchParams: Search
           ) : undefined
         }
       />
-      <ProjectSwitcher projects={projects} value={project.id} />
+      {/* "ทุกโครงการ" in the left menu: a site plan needs one project, so pick it here. */}
+      {!(await scopeProjectId(me.role)) && <ProjectSwitcher projects={projects} value={project.id} />}
       <PlotBoard
         key={project.id}
         projectId={project.id}

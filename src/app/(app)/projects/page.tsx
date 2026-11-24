@@ -1,12 +1,25 @@
 import Link from "next/link";
+import { SettingsTabs } from "@/components/settings/settings-tabs";
 import type { ReactNode } from "react";
-import { loadCoverUrls, loadModelCategories, loadUnitCounts, soldCount, type UnitCounts } from "@/components/projects/load";
+import {
+  loadCoverUrls,
+  loadModelCategories,
+  loadUnitCounts,
+  soldCount,
+  type UnitCounts,
+} from "@/components/projects/load";
 import { ProjectCover } from "@/components/projects/project-cover";
 import { Badge, EmptyState, PageTitle } from "@/components/ui/card";
 import { houseCategoryOf, type HouseCategory } from "@/config/houses";
 import { requireMe } from "@/lib/auth";
 import { num } from "@/lib/format";
-import { FreePlotIcon, LocationIcon, ProjectIcon, ReservedIcon, TransferredIcon } from "@/lib/icons";
+import {
+  FreePlotIcon,
+  LocationIcon,
+  ProjectIcon,
+  ReservedIcon,
+  TransferredIcon,
+} from "@/lib/icons";
 import { createClient } from "@/lib/supabase/server";
 import { ProjectFormButton, type ProjectRow } from "./project-forms";
 
@@ -37,11 +50,18 @@ export default async function ProjectsPage() {
     loadModelCategories(supabase),
   ]);
   const rows = (data ?? []) as ProjectRow[];
-  const urls = await loadCoverUrls(supabase, rows.map((p) => p.cover_path));
-  const projects = rows.map((p) => ({ ...p, cover_url: p.cover_path ? (urls.get(p.cover_path) ?? null) : null }));
+  const urls = await loadCoverUrls(
+    supabase,
+    rows.map((p) => p.cover_path),
+  );
+  const projects = rows.map((p) => ({
+    ...p,
+    cover_url: p.cover_path ? (urls.get(p.cover_path) ?? null) : null,
+  }));
 
   return (
     <>
+      {isAdmin && <SettingsTabs active="projects" />}
       <PageTitle
         title="โครงการ"
         sub={`${projects.length} โครงการ`}
@@ -52,11 +72,17 @@ export default async function ProjectsPage() {
         <EmptyState
           icon={ProjectIcon}
           title="ยังไม่มีโครงการ"
-          hint={isAdmin ? "เพิ่มโครงการแรก ใส่ชื่อ ที่ตั้ง และรูปปก แล้วนำเข้ารายการแปลงต่อได้เลย" : "ให้แอดมินมอบหมายโครงการให้คุณ"}
-          action={isAdmin ? <ProjectFormButton label="เพิ่มโครงการ" /> : undefined}
+          hint={
+            isAdmin
+              ? "เพิ่มโครงการแรก ใส่ชื่อ ที่ตั้ง และรูปปก แล้วนำเข้ารายการแปลงต่อได้เลย"
+              : "ให้แอดมินมอบหมายโครงการให้คุณ"
+          }
+          action={
+            isAdmin ? <ProjectFormButton label="เพิ่มโครงการ" /> : undefined
+          }
         />
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {projects.map((p) => (
             <ProjectCard
               key={p.id}
@@ -91,7 +117,9 @@ function ProjectCard({
       <div className="relative aspect-video w-full overflow-hidden bg-bg">
         <ProjectCover url={p.cover_url ?? null} name={p.name} />
         <span className="absolute top-2 left-2">
-          <Badge tone={p.is_open ? "ok" : "neutral"}>{p.is_open ? "เปิดขาย" : "ปิดการขาย"}</Badge>
+          <Badge tone={p.is_open ? "ok" : "neutral"}>
+            {p.is_open ? "เปิดขาย" : "ปิดการขาย"}
+          </Badge>
         </span>
       </div>
 
@@ -104,12 +132,15 @@ function ProjectCard({
           >
             {p.name}
           </Link>
-          <p className="flex min-w-0 items-center gap-1 text-sm text-ink-soft">
+          <p className="flex min-w-0 items-center gap-1 text-ink-soft">
             <LocationIcon aria-hidden className="h-4 w-4 shrink-0" />
             <span className="truncate">{p.location || "ยังไม่ระบุที่ตั้ง"}</span>
           </p>
           {categories.length > 0 && (
-            <ul aria-label="แบบบ้านในโครงการ" className="mt-2 flex flex-wrap gap-1">
+            <ul
+              aria-label="แบบบ้านในโครงการ"
+              className="mt-2 flex flex-wrap gap-1"
+            >
               {categories.map((k) => {
                 const cat = houseCategoryOf(k.category);
                 return (
@@ -130,9 +161,24 @@ function ProjectCard({
           <>
             {/* ว่าง = available + interested (still free to reserve) · จอง = reserved + contracted */}
             <ul className="grid grid-cols-3 gap-2 text-sm">
-              <MiniStat icon={<FreePlotIcon aria-hidden className="h-4 w-4" />} label="แปลงว่าง" value={`${num(c.available + c.interested)}/${num(c.total)}`} tone="text-brand" />
-              <MiniStat icon={<ReservedIcon aria-hidden className="h-4 w-4" />} label="จอง" value={num(c.reserved + c.contracted)} tone="text-info" />
-              <MiniStat icon={<TransferredIcon aria-hidden className="h-4 w-4" />} label="โอน" value={num(c.transferred)} tone="text-ok" />
+              <MiniStat
+                icon={<FreePlotIcon aria-hidden className="h-4 w-4" />}
+                label="แปลงว่าง"
+                value={`${num(c.available + c.interested)}/${num(c.total)}`}
+                tone="text-brand"
+              />
+              <MiniStat
+                icon={<ReservedIcon aria-hidden className="h-4 w-4" />}
+                label="จอง"
+                value={num(c.reserved + c.contracted)}
+                tone="text-info"
+              />
+              <MiniStat
+                icon={<TransferredIcon aria-hidden className="h-4 w-4" />}
+                label="โอน"
+                value={num(c.transferred)}
+                tone="text-ok"
+              />
             </ul>
             <div className="flex flex-col gap-1">
               <div className="flex justify-between text-xs text-ink-soft">
@@ -147,7 +193,10 @@ function ProjectCard({
                 aria-valuemax={100}
                 className="h-2 w-full overflow-hidden rounded-full bg-line"
               >
-                <div className="h-full rounded-full bg-ok" style={{ width: `${soldPct}%` }} />
+                <div
+                  className="h-full rounded-full bg-ok"
+                  style={{ width: `${soldPct}%` }}
+                />
               </div>
             </div>
           </>
@@ -163,7 +212,17 @@ function ProjectCard({
   );
 }
 
-function MiniStat({ icon, label, value, tone }: { icon: ReactNode; label: string; value: string; tone: string }) {
+function MiniStat({
+  icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  tone: string;
+}) {
   return (
     <li className="flex flex-col gap-0.5 rounded-control bg-bg px-2 py-1.5">
       <span className={`flex items-center gap-1 text-xs ${tone}`}>

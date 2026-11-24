@@ -30,21 +30,25 @@ Pages that show "หน้านี้ยังไม่ได้สร้าง
 
 ## Rules
 
+0. **Central first (owner, 24 Nov 2569 — applies to every change).** Never style or build a thing page by page. Use the shared parts: classes in `src/app/globals.css` (`.lbl` field label · `.val` field value · `.link` clickable text · `.nav-progress`) and components in `src/components/ui/` (InfoList, IconButton, MemberDropdown, StatusTabs, Tabs, Pagination, DataTable, ActionIcon/Button, PlotMapPicker …). If something is needed twice and no shared part exists, create the shared class/component first, then use it everywhere it applies, and list it here.
+
 1. All user-facing text is Thai. Code and comments are English.
-2. Colors, font and sizes come from `src/app/globals.css` only. Use the theme classes (`bg-brand`, `text-ink-soft`, `rounded-card`, `text-xl` ...). Never write a hex color or a pixel font size in a page.
+2. Colors, font and sizes come from `src/app/globals.css` only. Normal text (body, table cells, values next to a label, menu and tab labels, funnel/step labels) is `text-base font-normal` (16px regular) — owner, 24 Nov 2569. Bold (`font-semibold`/`font-bold`) only for page and card titles, big numbers and buttons. A label and its value sit on one line with `items-center`. Use the theme classes (`bg-brand`, `text-ink-soft`, `rounded-card`, `text-xl` ...). Never write a hex color or a pixel font size in a page.
 3. Reuse `src/components/ui/` (same parts as the aoo apps; all shown on `/theme`). Add a new shared component there instead of repeating markup.
    - Basics: `button` (Button) · `field` (Field, Input, Textarea, Select) · `card` (Card, Badge, StageBadge, EmptyState, Loading, Notice, PageTitle, SectionTitle, StatTile) · `avatar`.
    - Boxes: `modal` (Modal) · `confirm-card` (Sheet, ConfirmCard) · `popover` · `tooltip` (every icon-only button) · `help-hint` (ⓘ explanations) · `image-lightbox` (every photo opens in it).
    - Lists: `data-table` (DataTable: every list table, cards on phones) · `status-tabs` (filter tabs with counts, via URL params) · `search-input` · `action-menu` (⋯ for 2+ row actions) · `collapsible-card` · `skeleton` (loading.tsx).
-   - Inputs: `form-select` (FormSelect: never a native `<select>`) · `multi-select-search` · `toggle` (Toggle, ToggleRow) · `checkbox` (Checkbox, Radio) · `date-range-picker` · `time-picker` · `file-dropzone` (every upload) · `copy-field` · `chips-input` · `thai-address-input` · `sticky-action-bar` · `stepper` (Stepper, SetupSteps).
-4. Mobile first. One screen, one job. Tappable things are at least 44px high (`min-h-11`). Below 768px tables become stacked cards.
+   - Inputs: `form-select` (FormSelect: never a native `<select>`) · `member-dropdown` (MemberDropdown: the only staff picker, with profile pictures) · `multi-select-search` · `toggle` (Toggle, ToggleRow) · `checkbox` (Checkbox, Radio) · `date-range-picker` · `time-picker` · `file-dropzone` (every upload) · `copy-field` · `chips-input` · `thai-address-input` · `sticky-action-bar` · `stepper` (Stepper, SetupSteps).
+4. Mobile first. One screen, one job. Tappable things are at least 44px high (`min-h-11`). Below 768px tables become stacked cards. A card that sits in a grid (several per row) lays out by its own width, not the screen: put `@container` on the card and use `@xl:flex-row` etc. (example: `src/components/lead/upcoming-visits.tsx`), so buttons never squeeze the text at in-between sizes.
 5. Permissions are enforced in the database with Row Level Security on every table. Hiding a menu is not a permission.
-6. Pages with several filters or totals call one Supabase RPC. Do not fetch raw rows and calculate in the browser. Long lists load 30 rows at a time.
+6. Pages with several filters or totals call one Supabase RPC. Do not fetch raw rows and calculate in the browser. List pages use `<Pagination>` (src/components/ui/pagination.tsx, `?page=` → RPC offset, 30 rows a page). Supabase returns at most 1,000 rows per request without warning: anything that needs every row (exports, a project's plots, the team's work today) reads through `fetchAllRpc` (src/lib/fetch-all.ts).
 7. Icon-only buttons need a Thai `aria-label`. Status is never shown by color alone.
 8. Actions the user cannot undo alone use `ConfirmCard`, and the confirm button names the action.
+   Button icons (owner, 24 Nov 2569): every "เพิ่ม…" button shows ＋, every search button a magnifier, every delete a bin — `<Button icon="add|search|delete">` or `<ActionIcon kind=… />` inside a `buttonClass()` link (src/components/ui/button.tsx). A search button is `secondary`, not the page's main colour.
 9. The app name comes from `src/config/app.ts`. Stage keys come from `src/config/stages.ts`.
 10. Secrets (Supabase secret key, Meta token) stay on the server. Never send them to the browser.
 11. A database change is a new numbered file in `supabase/migrations/`. Never edit a file that has already been run.
+12. Every navigation shows loading (owner, 24 Nov 2569): each page folder has a `loading.tsx` (PageSkeleton from `src/components/ui/skeleton.tsx`), and `NavProgress` (src/components/shell/nav-progress.tsx, mounted in the app layout) runs a top bar and dims the page for every link, tab, filter and GET form by itself. Code that moves with `router.push`/`router.replace` calls `startNav()` first. GET filter forms need `method="get"`. Picking a plot always uses `PlotMapPicker` (src/components/plots/plot-map-picker.tsx).
 
 ## Commands
 

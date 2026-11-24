@@ -50,6 +50,7 @@ export async function toggleInterest(input: { unitId: string; leadId: string; on
     p_on: input.on,
   });
   if (error) return { ok: false, error: thaiError(error.message) };
-  revalidatePath(`/leads/${input.leadId}`);
+  // No revalidatePath: the picker updates itself at once (optimistic); re-rendering the whole
+  // customer page here made every tap wait for it.
   return { ok: true };
 }

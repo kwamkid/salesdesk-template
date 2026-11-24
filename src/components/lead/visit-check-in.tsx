@@ -73,7 +73,8 @@ export function VisitCheckIn({ leadId, nextFollowUp }: { leadId: string; nextFol
   return (
     <>
       <Button
-        full
+        variant="secondary"
+        icon="checkin"
         onClick={() => {
           setDone("");
           setOpen(true);

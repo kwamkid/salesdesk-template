@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { AppNav } from "@/components/app-nav";
+import { NavProgress } from "@/components/shell/nav-progress";
+import { ProjectScope } from "@/components/shell/project-scope";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Sidebar } from "@/components/shell/sidebar";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
@@ -8,17 +11,27 @@ import { APP } from "@/config/app";
 import { HOME, MENU, ROLE_LABEL } from "@/config/roles";
 import { Avatar } from "@/components/ui/avatar";
 import { requireMe } from "@/lib/auth";
+import { getScope } from "@/lib/project-scope";
 
 /** Shell for every page behind the login, laid out like aoocommerce:
  *  left menu (sticky, full height) | sticky top bar + content. Phones get a bottom bar instead of the left menu. */
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const me = await requireMe();
   const name = me.full_name || me.email;
+  const scope = await getScope(me.role);
+  const picker = (compact?: boolean) => (
+    <ProjectScope
+      projects={scope.projects}
+      currentId={scope.current?.id ?? null}
+      allLabel={me.role === "sales" ? "ทุกโครงการของฉัน" : "ทุกโครงการ"}
+      compact={compact}
+    />
+  );
   // requireMe() does not read the picture; one small extra read for the header chip.
 
   return (
     <div className="flex min-h-dvh bg-bg">
-      <Sidebar items={MENU[me.role]} homeHref={HOME[me.role]} />
+      <Sidebar items={MENU[me.role]} homeHref={HOME[me.role]} top={picker()} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar — h-16 so its bottom line meets the sidebar's logo row. The page title lives in the page (PageTitle). */}
@@ -27,8 +40,10 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             {/* Phones: logo + name (no sidebar there) */}
             <Link href={HOME[me.role]} className="flex min-h-11 min-w-0 items-center gap-2 font-bold md:hidden">
               <Image src={APP.logo} alt={`โลโก้ ${APP.name}`} width={32} height={32} className="h-8 w-8 shrink-0" priority />
-              <span className="truncate text-lg">{APP.name}</span>
+              {scope.projects.length === 0 && <span className="truncate text-lg">{APP.name}</span>}
             </Link>
+            {/* Phones: the project picker sits where the app name was */}
+            <div className="min-w-0 flex-1 md:hidden">{picker(true)}</div>
 
             <div className="flex shrink-0 items-center gap-1 md:gap-2">
               <ThemeToggle />
@@ -58,6 +73,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       </div>
 
       <AppNav items={MENU[me.role]} />
+      <Suspense>
+        <NavProgress />
+      </Suspense>
     </div>
   );
 }

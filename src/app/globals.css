@@ -21,8 +21,8 @@
   --brand-ink: #ffffff; /* text on --brand */
   --brand-soft: #fff7ed; /* light tint of the brand, for selected rows */
 
-  --ink: #111827; /* main text (gray-900) */
-  --ink-soft: #4b5563; /* secondary text (gray-600) */
+  --ink: #030712; /* main text (gray-950) */
+  --ink-soft: #374151; /* secondary text (gray-700): readable on white and on --bg */
   --surface: #ffffff; /* card background */
   --bg: #f9fafb; /* app background (gray-50) */
   --line: #e5e7eb; /* dividers, card borders (gray-200) */
@@ -297,4 +297,59 @@ select {
   transform: translateY(-50%) !important;
   margin-top: 0 !important;
   margin-left: 8px;
+}
+
+/* Navigation feedback (src/components/shell/nav-progress.tsx): a bar across the top and dimmed content
+   from the tap until the next page arrives. Used by every link, filter, tab and menu. */
+.nav-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 60;
+  height: 3px;
+  pointer-events: none;
+  opacity: 0;
+  background: var(--brand);
+  transform-origin: left;
+  transform: scaleX(0);
+}
+html[data-navigating] .nav-progress {
+  opacity: 1;
+  animation: nav-progress 8s cubic-bezier(0.1, 0.7, 0.2, 1) forwards;
+}
+@keyframes nav-progress {
+  0% { transform: scaleX(0); }
+  10% { transform: scaleX(0.4); }
+  100% { transform: scaleX(0.95); }
+}
+html[data-navigating] main {
+  opacity: 0.55;
+  pointer-events: none;
+  transition: opacity 0.15s 0.1s;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-navigating] .nav-progress { animation: none; transform: scaleX(0.6); }
+}
+
+/* Central text roles (owner, 24 Nov 2569) — use these instead of mixing sizes/colours per page.
+   .lbl  = the name of a field ("โครงการ", "ตามครั้งถัดไป"): small, grey
+   .val  = its value: normal size, dark, medium weight so it stands out from the label
+   .link = anything you can click that is text (names in tables, "ดูผัง"): brand colour, underline on hover */
+.lbl {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+.val {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+.link {
+  color: var(--brand);
+  text-underline-offset: 2px;
+}
+.link:hover {
+  text-decoration: underline;
 }

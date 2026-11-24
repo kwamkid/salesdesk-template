@@ -127,12 +127,12 @@ function PersonPopover({ name, details, children }: { name: string; details: Ava
         {(details.phone || details.email) && (
           <div className="mt-2 flex flex-col gap-1 text-sm">
             {details.phone && (
-              <a href={`tel:${details.phone}`} className="inline-flex min-h-11 items-center text-brand underline-offset-2 hover:underline">
+              <a href={`tel:${details.phone}`} className="inline-flex min-h-11 items-center link">
                 โทร {details.phone}
               </a>
             )}
             {details.email && (
-              <a href={`mailto:${details.email}`} className="inline-flex min-h-11 items-center break-all text-brand underline-offset-2 hover:underline">
+              <a href={`mailto:${details.email}`} className="inline-flex min-h-11 items-center break-all link">
                 {details.email}
               </a>
             )}

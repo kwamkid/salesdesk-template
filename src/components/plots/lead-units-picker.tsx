@@ -1,15 +1,16 @@
 "use client";
 
+import { IconButton } from "@/components/ui/icon-button";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toggleInterest } from "@/app/(app)/plots/actions";
-import { Button, buttonClass } from "@/components/ui/button";
+import { ActionIcon, Button, buttonClass } from "@/components/ui/button";
 import { Badge, Card, Notice } from "@/components/ui/card";
 import { Sheet } from "@/components/ui/confirm-card";
 import { unitStatusOf } from "@/config/units";
 import { baht } from "@/lib/format";
-import { PlotPicker } from "./plot-picker";
-import { hasPin, type BoardUnit } from "./types";
+import { PlotMapPicker } from "./plot-map-picker";
+import { hasPin, type BoardUnit, type PlanView } from "./types";
 
 /** Client part of <LeadUnits>: the customer's plots and the "เลือกแปลงที่สนใจ" sheet. */
 export function LeadUnitsPicker({
@@ -17,12 +18,15 @@ export function LeadUnitsPicker({
   projectId,
   editable,
   units,
+  plans = [],
   initialInterestIds,
 }: {
   leadId: string;
   projectId: string;
   editable: boolean;
   units: BoardUnit[];
+  /** Site plans with a picture: the picker shows the map first. */
+  plans?: PlanView[];
   initialInterestIds: string[];
 }) {
   const [interest, setInterest] = useState(() => new Set(initialInterestIds));
@@ -35,21 +39,29 @@ export function LeadUnitsPicker({
   const liked = units.filter((u) => interest.has(u.id));
   const planHref = (u: BoardUnit) => `/plots?project=${projectId}&unit=${u.id}`;
 
-  const toggle = (u: BoardUnit, on: boolean) =>
+  const flip = (id: string, on: boolean) =>
+    setInterest((s) => {
+      const n = new Set(s);
+      if (on) n.add(id);
+      else n.delete(id);
+      return n;
+    });
+
+  // Optimistic: the list changes and the dialog closes at once; the save runs in the background
+  // and is undone (with a message) only if it fails.
+  const toggle = (u: BoardUnit, on: boolean) => {
+    setError("");
+    flip(u.id, on);
+    setOpen(false);
+    setPicked(null);
     start(async () => {
-      setError("");
       const res = await toggleInterest({ unitId: u.id, leadId, on });
       if (!res.ok) {
+        flip(u.id, !on);
         setError(res.error);
-        return;
       }
-      setInterest((s) => {
-        const n = new Set(s);
-        if (on) n.add(u.id);
-        else n.delete(u.id);
-        return n;
-      });
     });
+  };
 
   return (
     <Card className="flex flex-col gap-3">
@@ -57,10 +69,15 @@ export function LeadUnitsPicker({
       {error && !open && <Notice tone="danger">{error}</Notice>}
 
       {reserved.map((u) => (
-        <div key={u.id} className="flex items-center justify-between gap-3 rounded-control bg-bg p-3">
+        <div
+          key={u.id}
+          className="flex items-center justify-between gap-3 rounded-control bg-bg p-3"
+        >
           <p className="min-w-0">
             <span className="font-medium">แปลง {u.code}</span>{" "}
-            <Badge tone={unitStatusOf(u.status).tone}>{unitStatusOf(u.status).label}</Badge>
+            <Badge tone={unitStatusOf(u.status).tone}>
+              {unitStatusOf(u.status).label}
+            </Badge>
             <span className="block text-sm text-ink-soft">{baht(u.price)}</span>
           </p>
           <Link href={planHref(u)} className={buttonClass("secondary")}>
@@ -76,7 +93,10 @@ export function LeadUnitsPicker({
         ) : (
           <ul className="flex flex-col divide-y divide-line">
             {liked.map((u) => (
-              <li key={u.id} className="flex min-h-11 items-center justify-between gap-3 py-1">
+              <li
+                key={u.id}
+                className="flex min-h-11 items-center justify-between gap-3 py-1"
+              >
                 <Link href={planHref(u)} className="min-w-0 flex-1 truncate">
                   <span className="font-medium">{u.code}</span>{" "}
                   <span className="text-sm text-ink-soft">
@@ -84,14 +104,13 @@ export function LeadUnitsPicker({
                   </span>
                 </Link>
                 {editable && (
-                  <Button
-                    variant="ghost"
+                  <IconButton
+                    kind="remove"
+                    tone="danger"
+                    label={`เอาแปลง ${u.code} ออกจากที่สนใจ`}
                     disabled={busy}
-                    aria-label={`เอาแปลง ${u.code} ออกจากที่สนใจ`}
                     onClick={() => toggle(u, false)}
-                  >
-                    เอาออก
-                  </Button>
+                  />
                 )}
               </li>
             ))}
@@ -100,7 +119,12 @@ export function LeadUnitsPicker({
       </div>
 
       {editable && (
-        <Button variant="secondary" full onClick={() => setOpen(true)} disabled={units.length === 0}>
+        <Button
+          variant="secondary"
+          full
+          onClick={() => setOpen(true)}
+          disabled={units.length === 0}
+        >
           {units.length === 0 ? "โครงการนี้ยังไม่มีรายการแปลง" : "เลือกแปลงที่สนใจ"}
         </Button>
       )}
@@ -113,36 +137,67 @@ export function LeadUnitsPicker({
           setError("");
         }}
         title="เลือกแปลงที่สนใจ"
+        size="4xl"
       >
         <div className="flex flex-col gap-3">
-          <PlotPicker units={units} onPick={setPicked} describe={(u) => (interest.has(u.id) ? "สนใจแล้ว" : "")} />
+          <PlotMapPicker
+            units={units}
+            plans={plans}
+            selectedId={picked?.id ?? null}
+            marked={interest}
+            onPick={setPicked}
+          />
           {error && <Notice tone="danger">{error}</Notice>}
           {picked && (
             <div className="flex flex-col gap-2 rounded-control border border-line p-3">
               <p>
                 <span className="font-medium">แปลง {picked.code}</span>{" "}
-                <Badge tone={unitStatusOf(picked.status).tone}>{unitStatusOf(picked.status).label}</Badge>
+                <Badge tone={unitStatusOf(picked.status).tone}>
+                  {unitStatusOf(picked.status).label}
+                </Badge>
                 <span className="block text-sm text-ink-soft">
-                  {[picked.zone && `โซน ${picked.zone}`, picked.house_type, baht(picked.price)].filter(Boolean).join(" · ")}
+                  {[
+                    picked.zone && `โซน ${picked.zone}`,
+                    picked.house_type,
+                    baht(picked.price),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </span>
               </p>
               {interest.has(picked.id) ? (
-                <Button variant="secondary" full disabled={busy} onClick={() => toggle(picked, false)}>
+                <Button
+                  variant="secondary"
+                  full
+                  disabled={busy}
+                  onClick={() => toggle(picked, false)}
+                >
                   {busy ? "กำลังบันทึก" : `เอาแปลง ${picked.code} ออกจากที่สนใจ`}
                 </Button>
               ) : (
-                <Button full disabled={busy} onClick={() => toggle(picked, true)}>
+                <Button
+                  full
+                  disabled={busy}
+                  onClick={() => toggle(picked, true)}
+                >
+                  <ActionIcon kind="add" />
                   {busy ? "กำลังบันทึก" : `เพิ่มแปลง ${picked.code} เป็นแปลงที่สนใจ`}
                 </Button>
               )}
               {hasPin(picked) && (
-                <Link href={planHref(picked)} className={buttonClass("ghost", true)}>
+                <Link
+                  href={planHref(picked)}
+                  className={buttonClass("ghost", true)}
+                >
                   ดูบนผัง
                 </Link>
               )}
             </div>
           )}
-          <Link href={`/plots?project=${projectId}`} className="min-h-11 py-3 text-center text-sm text-brand underline">
+          <Link
+            href={`/plots?project=${projectId}`}
+            className="min-h-11 py-3 text-center text-sm link"
+          >
             เปิดผังโครงการ
           </Link>
         </div>

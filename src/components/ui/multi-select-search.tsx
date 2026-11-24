@@ -228,7 +228,7 @@ export function MultiSelectSearch({
         {pickedOptions.length > 0 && (
           <div className="flex shrink-0 items-center justify-between border-t border-line bg-bg px-3 py-1 text-sm text-ink-soft">
             <span>เลือกแล้ว {pickedOptions.length} รายการ</span>
-            <button type="button" onClick={() => set([])} className="min-h-11 px-2 font-medium text-brand hover:underline">
+            <button type="button" onClick={() => set([])} className="min-h-11 px-2 link">
               ล้าง
             </button>
           </div>

@@ -138,8 +138,8 @@ export default async function DocumentPage({ params }: { params: Promise<{ leadI
             {history.map((h) => (
               <li key={h.id}>
                 <Card className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="font-medium">
+                  <div className="min-w-0">
+                    <p className="break-words">
                       {getDocument(h.doc_key)?.title ?? h.doc_key} · {h.doc_no}
                     </p>
                     <p className="text-sm text-ink-soft">

@@ -49,8 +49,8 @@ export function DocumentReview({
   return (
     <div className="doc-print-root flex flex-col gap-4">
       <div className="no-print flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="text-xl font-semibold">{doc.title}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="min-w-0 text-xl font-semibold break-words">{doc.title}</h1>
           <Link href={`/leads/${leadId}`} className={buttonClass("secondary")}>
             กลับหน้าลูกค้า
           </Link>

@@ -5,7 +5,12 @@ import { useState, useTransition } from "react";
 import type { PlanView } from "@/components/plots/types";
 import { Button } from "@/components/ui/button";
 import { Card, Notice, SectionTitle } from "@/components/ui/card";
-import { CoverUploadIcon, DeleteIcon, SitePlanIcon, ZoomInIcon } from "@/lib/icons";
+import {
+  CoverUploadIcon,
+  DeleteIcon,
+  SitePlanIcon,
+  ZoomInIcon,
+} from "@/lib/icons";
 import { ActionMenu } from "@/components/ui/action-menu";
 import { FileDropzone } from "@/components/ui/file-dropzone";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
@@ -20,11 +25,14 @@ const TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 /** Read the picture size in the browser and shrink it when the long side is over 4000px
  *  (or the file is over the bucket limit). */
-async function prepareImage(file: File): Promise<{ blob: Blob; width: number; height: number; ext: string }> {
+async function prepareImage(
+  file: File,
+): Promise<{ blob: Blob; width: number; height: number; ext: string }> {
   const bmp = await createImageBitmap(file);
   const { width, height } = bmp;
   const scale = Math.min(1, MAX_SIDE / Math.max(width, height));
-  const extOf = (t: string) => (t === "image/png" ? "png" : t === "image/webp" ? "webp" : "jpg");
+  const extOf = (t: string) =>
+    t === "image/png" ? "png" : t === "image/webp" ? "webp" : "jpg";
   if (scale === 1 && file.size <= MAX_BYTES) {
     bmp.close();
     return { blob: file, width, height, ext: extOf(file.type) };
@@ -40,14 +48,21 @@ async function prepareImage(file: File): Promise<{ blob: Blob; width: number; he
   bmp.close();
   // JPEG keeps a big plan small; plot numbers stay readable at 0.9
   const blob = await new Promise<Blob>((ok, fail) =>
-    canvas.toBlob((b) => (b ? ok(b) : fail(new Error("resize failed"))), "image/jpeg", 0.9),
+    canvas.toBlob(
+      (b) => (b ? ok(b) : fail(new Error("resize failed"))),
+      "image/jpeg",
+      0.9,
+    ),
   );
   return { blob, width: w, height: h, ext: "jpg" };
 }
 
 function PlanRow({ projectId, plan }: { projectId: string; plan: PlanView }) {
   const router = useRouter();
-  const [status, setStatus] = useState<{ tone: "ok" | "warn" | "danger"; text: string } | null>(null);
+  const [status, setStatus] = useState<{
+    tone: "ok" | "warn" | "danger";
+    text: string;
+  } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [viewing, setViewing] = useState(false);
@@ -72,20 +87,34 @@ function PlanRow({ projectId, plan }: { projectId: string; plan: PlanView }) {
       const supabase = createClient();
       const { error } = await supabase.storage
         .from("site-plans")
-        .upload(path, img.blob, { contentType: img.ext === "jpg" ? "image/jpeg" : `image/${img.ext}`, upsert: false });
+        .upload(path, img.blob, {
+          contentType: img.ext === "jpg" ? "image/jpeg" : `image/${img.ext}`,
+          upsert: false,
+        });
       if (error) throw error;
-      const res = await setPlanImage({ planId: plan.id, path, width: img.width, height: img.height });
+      const res = await setPlanImage({
+        planId: plan.id,
+        path,
+        width: img.width,
+        height: img.height,
+      });
       if (!res.ok) {
         await supabase.storage.from("site-plans").remove([path]);
         throw new Error(res.error);
       }
-      setStatus({ tone: "ok", text: `อัปโหลดแล้ว (${img.width} × ${img.height} px)` });
+      setStatus({
+        tone: "ok",
+        text: `อัปโหลดแล้ว (${img.width} × ${img.height} px)`,
+      });
       setFile(null);
       setPickKey((k) => k + 1);
       setReplacing(false);
       router.refresh();
     } catch {
-      setStatus({ tone: "danger", text: "อัปโหลดไม่สำเร็จ ลองใหม่อีกครั้ง (ไฟล์ต้องไม่เกิน 10 MB)" });
+      setStatus({
+        tone: "danger",
+        text: "อัปโหลดไม่สำเร็จ ลองใหม่อีกครั้ง (ไฟล์ต้องไม่เกิน 10 MB)",
+      });
     } finally {
       setUploading(false);
     }
@@ -113,11 +142,15 @@ function PlanRow({ projectId, plan }: { projectId: string; plan: PlanView }) {
               className="shrink-0 overflow-hidden rounded-control border border-line"
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- signed URL of a private file */}
-              <img src={plan.url} alt={`รูปย่อ ${plan.name}`} className="h-16 w-24 object-cover" />
+              <img
+                src={plan.url}
+                alt={`รูปย่อ ${plan.name}`}
+                className="h-16 w-24 object-cover"
+              />
             </button>
           )}
           <div className="min-w-0">
-            <p className="font-medium">{plan.name}</p>
+            <p className="break-words">{plan.name}</p>
             <p className="text-sm text-ink-soft">
               {plan.image_path
                 ? `มีรูปแล้ว${plan.image_w ? ` · ${plan.image_w} × ${plan.image_h} px` : ""}`
@@ -128,11 +161,34 @@ function PlanRow({ projectId, plan }: { projectId: string; plan: PlanView }) {
         <ActionMenu
           label={`ตัวเลือกของผัง ${plan.name}`}
           items={[
-            ...(plan.url ? [{ key: "view", label: "ดูรูปผัง", icon: <ZoomInIcon />, onClick: () => setViewing(true) }] : []),
-            ...(plan.image_path
-              ? [{ key: "replace", label: "เปลี่ยนรูปผัง", icon: <CoverUploadIcon />, onClick: () => setReplacing(true) }]
+            ...(plan.url
+              ? [
+                  {
+                    key: "view",
+                    label: "ดูรูปผัง",
+                    icon: <ZoomInIcon />,
+                    onClick: () => setViewing(true),
+                  },
+                ]
               : []),
-            { key: "delete", label: "ลบผัง", icon: <DeleteIcon />, danger: true, dividerBefore: true, onClick: () => setConfirm(true) },
+            ...(plan.image_path
+              ? [
+                  {
+                    key: "replace",
+                    label: "เปลี่ยนรูปผัง",
+                    icon: <CoverUploadIcon />,
+                    onClick: () => setReplacing(true),
+                  },
+                ]
+              : []),
+            {
+              key: "delete",
+              label: "ลบผัง",
+              icon: <DeleteIcon />,
+              danger: true,
+              dividerBefore: true,
+              onClick: () => setConfirm(true),
+            },
           ]}
         />
       </div>
@@ -142,7 +198,11 @@ function PlanRow({ projectId, plan }: { projectId: string; plan: PlanView }) {
           <FileDropzone
             key={pickKey}
             accept={TYPES.join(",")}
-            prompt={plan.image_path ? "ลากรูปผังใหม่มาวาง หรือแตะเพื่อเลือก" : "ลากรูปผังมาวาง หรือแตะเพื่อเลือก"}
+            prompt={
+              plan.image_path
+                ? "ลากรูปผังใหม่มาวาง หรือแตะเพื่อเลือก"
+                : "ลากรูปผังมาวาง หรือแตะเพื่อเลือก"
+            }
             hint="JPG, PNG หรือ WebP · ด้านยาวเกิน 4000 px ระบบย่อให้"
             disabled={uploading}
             onFile={(f) => {
@@ -152,7 +212,11 @@ function PlanRow({ projectId, plan }: { projectId: string; plan: PlanView }) {
           />
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => void upload()} disabled={!file || uploading}>
-              {uploading ? "กำลังอัปโหลด" : plan.image_path ? "บันทึกรูปผังใหม่" : "อัปโหลดรูปผัง"}
+              {uploading
+                ? "กำลังอัปโหลด"
+                : plan.image_path
+                  ? "บันทึกรูปผังใหม่"
+                  : "อัปโหลดรูปผัง"}
             </Button>
             {replacing && (
               <Button
@@ -194,7 +258,13 @@ function PlanRow({ projectId, plan }: { projectId: string; plan: PlanView }) {
 }
 
 /** Admin: add a plan per zone or phase, upload or replace its picture, delete it. */
-export function PlansManager({ projectId, plans }: { projectId: string; plans: PlanView[] }) {
+export function PlansManager({
+  projectId,
+  plans,
+}: {
+  projectId: string;
+  plans: PlanView[];
+}) {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [busy, start] = useTransition();
@@ -202,7 +272,10 @@ export function PlansManager({ projectId, plans }: { projectId: string; plans: P
   const add = () =>
     start(async () => {
       setError("");
-      const res = await createPlan(projectId, name || (plans.length ? `โซน ${plans.length + 1}` : "ผังโครงการ"));
+      const res = await createPlan(
+        projectId,
+        name || (plans.length ? `โซน ${plans.length + 1}` : "ผังโครงการ"),
+      );
       if (res.ok) setName("");
       else setError(res.error);
     });
@@ -236,7 +309,13 @@ export function PlansManager({ projectId, plans }: { projectId: string; plans: P
           onChange={(e) => setName(e.target.value)}
           placeholder={plans.length ? "ชื่อผัง เช่น โซน B" : "ชื่อผัง เช่น ผังโครงการ"}
         />
-        <Button type="submit" variant="secondary" disabled={busy} className="shrink-0">
+        <Button
+          type="submit"
+          variant="secondary"
+          disabled={busy}
+          icon="add"
+          className="shrink-0"
+        >
           {busy ? "กำลังเพิ่ม" : "เพิ่มผัง"}
         </Button>
       </form>

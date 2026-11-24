@@ -25,7 +25,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { DayPicker, type DateRange } from "react-day-picker";
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon } from "@/lib/icons";
-import { DATE_RANGE_PRESETS, type DateRangePresetDef } from "@/lib/date-range-presets";
+import { PICKER_PRESETS, type DateRangePresetDef } from "@/lib/date-range-presets";
 import { FloatingPanel, floatingContainerFor } from "./floating-panel";
 
 export type DateValueType = {
@@ -96,7 +96,7 @@ const monthName = (index: number, style: "long" | "short") =>
 const weekdayLabel = (date: Date) => format(date, "EEEEEE", { locale: th }).replace(/\.$/, "");
 
 type ViewMode = "calendar" | "months" | "years";
-const SHORTCUTS: DateRangePresetDef[] = DATE_RANGE_PRESETS;
+const SHORTCUTS: DateRangePresetDef[] = PICKER_PRESETS;
 
 // ---------------------------------------------------------------- styles (theme tokens only)
 // Two layers per day: the <td> carries the range band, the <button> inside is always a circle

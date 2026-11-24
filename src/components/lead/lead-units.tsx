@@ -15,7 +15,7 @@
  *   import { LeadUnits } from "@/components/lead/lead-units";
  *   <LeadUnits leadId={lead.id} projectId={lead.project_id} editable={me.role !== "executive"} />
  */
-import { loadBoard } from "@/components/plots/load";
+import { loadBoard, loadPlans } from "@/components/plots/load";
 import { LeadUnitsPicker } from "@/components/plots/lead-units-picker";
 import { createClient } from "@/lib/supabase/server";
 
@@ -29,9 +29,10 @@ export async function LeadUnits({
   editable: boolean;
 }) {
   const supabase = await createClient();
-  const [units, interests] = await Promise.all([
+  const [units, interests, plans] = await Promise.all([
     loadBoard(supabase, projectId),
     supabase.from("unit_interests").select("unit_id").eq("lead_id", leadId),
+    loadPlans(supabase, projectId),
   ]);
 
   return (
@@ -40,7 +41,10 @@ export async function LeadUnits({
       projectId={projectId}
       editable={editable}
       units={units}
-      initialInterestIds={(interests.data ?? []).map((i) => i.unit_id as string)}
+      plans={plans.filter((p) => p.url)}
+      initialInterestIds={(interests.data ?? []).map(
+        (i) => i.unit_id as string,
+      )}
     />
   );
 }

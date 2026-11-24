@@ -1,4 +1,34 @@
 import type { ButtonHTMLAttributes } from "react";
+import {
+  CallIcon,
+  CheckInIcon,
+  DeleteIcon,
+  EditIcon,
+  MENU_ICON,
+  NoteIcon,
+  RemoveIcon,
+  SearchIcon,
+} from "@/lib/icons";
+
+/** Owner's rule (24 Nov 2569): every "เพิ่ม…" button shows ＋, every search button a magnifier,
+ *  every delete button a bin. Use <Button icon="add"> or put <ActionIcon kind="add" /> inside a buttonClass() link. */
+export type ActionKind =
+  "add" | "search" | "delete" | "call" | "checkin" | "note" | "remove" | "edit";
+const ACTION_ICON = {
+  add: MENU_ICON.plus,
+  search: SearchIcon,
+  delete: DeleteIcon,
+  call: CallIcon,
+  checkin: CheckInIcon,
+  note: NoteIcon,
+  remove: RemoveIcon,
+  edit: EditIcon,
+};
+
+export function ActionIcon({ kind }: { kind: ActionKind }) {
+  const Icon = ACTION_ICON[kind];
+  return <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden />;
+}
 
 type Variant = "primary" | "secondary" | "danger" | "ghost";
 
@@ -24,10 +54,22 @@ const ENABLED_HOVER: Record<Variant, string> = {
   ghost: "enabled:hover:bg-sidebar-hover enabled:hover:text-ink",
 };
 
-type Props = ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; full?: boolean };
+type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: Variant;
+  full?: boolean;
+  icon?: ActionKind;
+};
 
 /** Every button is at least 44px high. A disabled button turns grey. */
-export function Button({ variant = "primary", full, className = "", type = "button", ...rest }: Props) {
+export function Button({
+  variant = "primary",
+  full,
+  className = "",
+  type = "button",
+  icon,
+  children,
+  ...rest
+}: Props) {
   return (
     <button
       type={type}
@@ -35,7 +77,10 @@ export function Button({ variant = "primary", full, className = "", type = "butt
         disabled:cursor-not-allowed disabled:border-transparent disabled:bg-line disabled:text-ink-soft
         ${STYLE[variant]} ${ENABLED_HOVER[variant]} ${full ? "w-full" : ""} ${className}`}
       {...rest}
-    />
+    >
+      {icon && <ActionIcon kind={icon} />}
+      {children}
+    </button>
   );
 }
 

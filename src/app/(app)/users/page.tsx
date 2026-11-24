@@ -1,47 +1,41 @@
-import { PageTitle } from "@/components/ui/card";
-import { StatusTabs } from "@/components/ui/status-tabs";
-import { ROLE_LABEL, ROLES, type Role } from "@/config/roles";
+import Link from "next/link";
+import { Notice, PageTitle } from "@/components/ui/card";
+import { SettingsTabs } from "@/components/settings/settings-tabs";
 import { requireMe } from "@/lib/auth";
 import { loadUsers } from "./data";
-import { InviteForm, UsersTable } from "./user-forms";
+import { InviteButton, UsersTable } from "./user-forms";
 
-export const metadata = { title: "ผู้ใช้" };
+export const metadata = { title: "พนักงาน" };
 
-const ROLE_TONE = { admin: "purple", executive: "info", sales: "brand" } as const;
-
-/** Tabs (?tab=): ทั้งหมด · each role (users still allowed in) · ปิดสิทธิ์. */
-export default async function UsersPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+/** Everyone allowed in (active or disabled), newest first is up to loadUsers(). Invite = button top right. */
+export default async function UsersPage() {
   const me = await requireMe(["admin"]);
-  const { tab: tabParam } = await searchParams;
   const { users, projects } = await loadUsers();
   const listed = users.filter((u) => u.status !== "pending");
-  const tab = tabParam === "disabled" || ROLES.includes(tabParam as Role) ? tabParam! : "all";
-  const shown =
-    tab === "all"
-      ? listed
-      : tab === "disabled"
-        ? listed.filter((u) => u.status === "disabled")
-        : listed.filter((u) => u.role === tab && u.status === "active");
+  const pending = users.length - listed.length;
 
   return (
     <>
-      <PageTitle title="ผู้ใช้" sub={`${listed.length} คน · คนที่รออนุมัติอยู่ในเมนูงานรอ`} />
-      <InviteForm projects={projects} />
-      <StatusTabs
-        activeKey={tab}
-        tabs={[
-          { key: "all", label: "ทั้งหมด", count: listed.length, href: "/users" },
-          ...ROLES.map((r) => ({
-            key: r,
-            label: ROLE_LABEL[r],
-            count: listed.filter((u) => u.role === r && u.status === "active").length,
-            tone: ROLE_TONE[r],
-            href: `/users?tab=${r}`,
-          })),
-          { key: "disabled", label: "ปิดสิทธิ์", count: listed.filter((u) => u.status === "disabled").length, tone: "danger", href: "/users?tab=disabled" },
-        ]}
+      <SettingsTabs active="users" />
+      <PageTitle
+        title="พนักงาน"
+        sub={`${listed.length} คน · กดรูปดินสอเพื่อแก้ระดับและโครงการที่ดูแล`}
+        action={<InviteButton projects={projects} />}
       />
-      <UsersTable users={shown} projects={projects} meId={me.id} targets={listed} />
+      {pending > 0 && (
+        <Notice tone="warn">
+          มี {pending} คนขอเข้าระบบ รออนุมัติ ·{" "}
+          <Link href="/queue" className="link">
+            ไปอนุมัติ
+          </Link>
+        </Notice>
+      )}
+      <UsersTable
+        users={listed}
+        projects={projects}
+        meId={me.id}
+        targets={listed}
+      />
     </>
   );
 }

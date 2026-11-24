@@ -94,22 +94,22 @@ export function StageSettingsForm({
           const label = STAGES.find((s) => s.key === r.stage)?.label ?? r.stage;
           return (
             <li key={r.stage} className="flex flex-col gap-2 py-3 md:grid md:grid-cols-4 md:items-center md:gap-3">
-              <p className="font-medium">
+              <p>
                 {label}
                 {STAGE_HINT[r.stage] && <HelpHint ariaLabel={`ความหมายของขั้น ${label}`}>{STAGE_HINT[r.stage]}</HelpHint>}
                 {PLOT_PRICE_STAGES.includes(r.stage) && (
-                  <span className="block text-xs font-normal text-ink-soft">ใช้ราคาแปลงถ้ามี</span>
+                  <span className="lbl block">ใช้ราคาแปลงถ้ามี</span>
                 )}
               </p>
-              <label className="flex flex-col gap-1">
-                <span className="text-xs text-ink-soft">
+              <label className="flex min-w-0 flex-col gap-1">
+                <span className="lbl">
                   มูลค่า (บาท)
                   <HelpHint ariaLabel="มูลค่าคืออะไร">ตัวเลขที่ส่งไปกับ event ให้ Meta รู้ว่าลูกค้าขั้นนี้มีค่าเท่าไร ว่างไว้ = ไม่ส่งมูลค่า</HelpHint>
                 </span>
                 <Input inputMode="decimal" value={r.value} onChange={(e) => set(r.stage, { value: e.target.value })} placeholder={PLOT_PRICE_STAGES.includes(r.stage) ? "ใช้ราคาแปลง" : "ไม่ระบุ"} />
               </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-xs text-ink-soft">
+              <label className="flex min-w-0 flex-col gap-1">
+                <span className="lbl">
                   ชื่อ event
                   <HelpHint ariaLabel="ชื่อ event คืออะไร">
                     ชื่อที่เห็นใน Meta Events Manager ค่าเริ่มต้นคือ {DEFAULT_EVENT[r.stage]} ลบให้ว่าง = กลับไปใช้ชื่อนี้
@@ -121,13 +121,13 @@ export function StageSettingsForm({
                   placeholder={DEFAULT_EVENT[r.stage]}
                   disabled={!r.send_event}
                 />
-                <span className="text-xs text-ink-soft">
+                <span className="lbl">
                   {ADS_COLUMN[r.event_name.trim() || DEFAULT_EVENT[r.stage]]
                     ? `คอลัมน์ใน Ads Manager: ${ADS_COLUMN[r.event_name.trim() || DEFAULT_EVENT[r.stage]]}`
                     : "ชื่อที่ตั้งเอง ไม่มีคอลัมน์ในแอด (ใช้ทำ audience ได้)"}
                 </span>
               </label>
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2">
                 <Toggle
                   checked={r.send_event}
                   onChange={(v) => set(r.stage, { send_event: v })}

@@ -47,11 +47,11 @@ export function StatTable({
 
   const titleCell = (r: StatRow) =>
     r.href ? (
-      <Link href={r.href} className="inline-flex min-h-11 items-center font-medium text-brand underline-offset-2 hover:underline">
+      <Link href={r.href} className="inline-flex min-h-11 items-center link">
         {r.title}
       </Link>
     ) : (
-      <span className="font-medium">{r.title}</span>
+      <span>{r.title}</span>
     );
 
   const cols: DataTableColumn<StatRow>[] = [

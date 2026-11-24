@@ -7,6 +7,7 @@ import {
   FileText,
   Inbox,
   Map,
+  Menu,
   Monitor,
   Moon,
   PanelLeftClose,
@@ -15,6 +16,7 @@ import {
   Settings,
   Sun,
   User,
+  UserCog,
   Users,
   UsersRound,
   type LucideIcon,
@@ -34,7 +36,11 @@ export const MENU_ICON: Record<IconName, LucideIcon> = {
   file: FileText,
   inbox: Inbox,
   gear: Settings,
+  users: UserCog,
 };
+
+/** Phone bottom bar: opens the rest of the menu. */
+export const MoreMenuIcon = Menu;
 
 export const CollapseMenuIcon = PanelLeftClose;
 export const ExpandMenuIcon = PanelLeftOpen;
@@ -115,3 +121,23 @@ export {
   Copy as CopyIcon,
   Clock as ClockIcon,
 } from "lucide-react";
+
+export { ChevronsUpDown as ProjectSwitchIcon, Layers as AllProjectsIcon } from "lucide-react";
+
+/** Lead channels (src/config/channels.ts) and the add-lead form. */
+export {
+  Phone as ChannelCallIcon,
+  Megaphone as ChannelAdsIcon,
+  MessageCircle as ChannelMessengerIcon,
+  MessageSquareText as ChannelLineIcon,
+  Footprints as ChannelWalkinIcon,
+  Sparkles as NewLeadIcon,
+  UserRound as CustomerIcon,
+  NotebookPen as FirstNoteIcon,
+  CircleCheck as PickedIcon,
+} from "lucide-react";
+
+export { Columns3 as ColumnsIcon } from "lucide-react";
+export { CalendarClock as AppointmentIcon, KeyRound as TransferIcon } from "lucide-react";
+export { Phone as CallIcon, MapPinCheck as CheckInIcon, NotebookPen as NoteIcon } from "lucide-react";
+export { X as RemoveIcon } from "lucide-react";

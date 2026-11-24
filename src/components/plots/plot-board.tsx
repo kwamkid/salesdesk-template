@@ -1,8 +1,10 @@
 "use client";
 
+import { fetchAllRpc } from "@/lib/fetch-all";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge, EmptyState, Notice } from "@/components/ui/card";
+import { Tabs } from "@/components/ui/tabs";
 import type { Role } from "@/config/roles";
 import { UNIT_STATUS, unitStatusOf } from "@/config/units";
 import { baht, num } from "@/lib/format";
@@ -83,9 +85,9 @@ export function PlotBoard({
   const wide = useWide();
 
   const refetch = useCallback(async () => {
-    const { data, error } = await supabase.rpc("unit_board", { p_project: projectId });
-    if (!error && data) {
-      setUnits(data as BoardUnit[]);
+    const { rows, error } = await fetchAllRpc<BoardUnit>(supabase, "unit_board", { p_project: projectId });
+    if (!error) {
+      setUnits(rows);
       setUpdatedAt(new Date());
     }
     return !error;
@@ -194,19 +196,15 @@ export function PlotBoard({
             <p className="text-sm text-ink-soft">โครงการนี้ยังไม่มีรูปผัง แสดงเป็นรายการ</p>
           ) : (
             !wide && (
-              <div role="group" aria-label="มุมมอง" className="flex rounded-control border border-line bg-surface p-0.5">
-                {(["plan", "list"] as const).map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    aria-pressed={view === v}
-                    onClick={() => setView(v)}
-                    className={`min-h-11 rounded-control px-4 text-sm font-medium ${view === v ? "bg-brand text-brand-ink" : "text-ink"}`}
-                  >
-                    {v === "plan" ? "ผัง" : "รายการ"}
-                  </button>
-                ))}
-              </div>
+              <Tabs
+                className="mb-0"
+                activeKey={view}
+                onSelect={(k) => setView(k as "plan" | "list")}
+                tabs={[
+                  { key: "plan", label: "ผัง" },
+                  { key: "list", label: "รายการ" },
+                ]}
+              />
             )
           )}
         </div>
@@ -222,29 +220,19 @@ export function PlotBoard({
       )}
 
       {planOn && plansWithPicture.length > 1 && (
-        <div role="tablist" aria-label="ผังแต่ละโซน" className="flex gap-2 overflow-x-auto">
-          {plansWithPicture.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              role="tab"
-              aria-selected={p.id === planId}
-              onClick={() => setPlanId(p.id)}
-              className={`min-h-11 shrink-0 rounded-control border px-4 text-sm font-medium ${
-                p.id === planId ? "border-brand bg-brand-soft text-brand" : "border-line bg-surface text-ink"
-              }`}
-            >
-              {p.name}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          className="mb-0"
+          activeKey={planId ?? ""}
+          onSelect={setPlanId}
+          tabs={plansWithPicture.map((p) => ({ key: p.id, label: p.name }))}
+        />
       )}
 
       {planOn && plan && planFailed[plan.id] && (
         <Notice tone="warn">โหลดรูปผังไม่ได้ เลือกแปลงจากช่องค้นหาหรือรายการด้านล่างได้ตามปกติ</Notice>
       )}
 
-      <div className={split ? "grid items-start gap-4 lg:grid-cols-3" : "flex flex-col gap-3"}>
+      <div className={split ? "grid grid-cols-1 items-start gap-4 lg:grid-cols-3" : "flex flex-col gap-3"}>
         {showPlan && plan && (
           <div className="flex min-w-0 flex-col gap-3 lg:col-span-2">
             <PlanViewer
@@ -269,7 +257,7 @@ export function PlotBoard({
             {selected && (
               <div className="flex items-center justify-between gap-3 rounded-card border border-line bg-surface p-3">
                 <p className="min-w-0 truncate">
-                  <span className="font-medium">แปลง {selected.code}</span>{" "}
+                  <span>แปลง {selected.code}</span>{" "}
                   <Badge tone={unitStatusOf(selected.status).tone}>{unitStatusOf(selected.status).label}</Badge>
                   {!hasPin(selected) && <span className="ml-2 text-sm text-ink-soft">ยังไม่มีหมุดบนผัง</span>}
                 </p>
@@ -351,12 +339,12 @@ export function UnitList({
   };
   const columns: DataTableColumn<BoardUnit>[] = compact
     ? [
-        { key: "code", header: "แปลง", sortable: true, render: (u) => <span className="font-medium">{u.code}</span> },
+        { key: "code", header: "แปลง", sortable: true, render: (u) => u.code },
         { key: "status", header: "สถานะ", render: status },
         { key: "price", header: "ราคา", align: "right", sortable: true, render: (u) => baht(u.price) },
       ]
     : [
-        { key: "code", header: "แปลง", sortable: true, render: (u) => <span className="font-medium">{u.code}</span> },
+        { key: "code", header: "แปลง", sortable: true, render: (u) => u.code },
         { key: "zone", header: "โซน", sortable: true, render: (u) => u.zone || "-" },
         { key: "house_type", header: "แบบบ้าน", sortable: true, sortValue: houseOf, render: (u) => houseOf(u) || "-" },
         { key: "land_sqw", header: "ที่ดิน (ตร.ว.)", align: "right", sortable: true, render: (u) => num(u.land_sqw), defaultHidden: true },
@@ -377,9 +365,9 @@ export function UnitList({
       mobileCardRender={(u) => (
         <div className="flex items-center justify-between gap-3">
           <span className="min-w-0">
-            <span className="block font-medium">
+            <span className="block">
               {u.code}
-              {u.zone && <span className="ml-2 text-sm font-normal text-ink-soft">โซน {u.zone}</span>}
+              {u.zone && <span className="ml-2 text-sm text-ink-soft">โซน {u.zone}</span>}
             </span>
             <span className="block truncate text-sm text-ink-soft">
               {[houseOf(u), baht(u.price), u.interest_count ? `สนใจ ${u.interest_count} คน` : ""].filter(Boolean).join(" · ")}

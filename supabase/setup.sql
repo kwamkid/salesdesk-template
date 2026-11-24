@@ -2247,3 +2247,281 @@ begin
 end
 $$;
 grant execute on function public.export_meta_audience(text, uuid) to authenticated;
+
+-- =====================================================================
+-- 0014_today_by_project.sql
+-- =====================================================================
+
+-- 0014 "งานวันนี้" follows the project picked in the left menu.
+-- Same as 0009 plus p_project: null = every project the caller may see.
+-- Run after 0013.
+
+drop function if exists public.today_list(uuid, boolean);
+
+create function public.today_list(p_owner uuid default null, p_all boolean default false, p_project uuid default null)
+returns table (
+  bucket text, lead_id uuid, full_name text, phone text, project_name text, stage public.lead_stage,
+  last_note text, next_follow_up date, days_overdue int, appointment_at timestamptz,
+  owner_id uuid, owner_name text
+)
+language sql stable security invoker set search_path = '' as $$
+  select * from (
+    select
+      case
+        when l.next_follow_up < public.today_th() then 'overdue'
+        when l.first_contact_at is null then 'new'
+        when l.next_follow_up = public.today_th() then 'today'
+        when l.next_follow_up <= public.today_th() + 7 then 'week'
+      end as bucket,
+      l.id as lead_id, l.full_name as lead_name, l.phone, pr.name as project_name, l.stage, l.last_note,
+      l.next_follow_up as follow_up, greatest(public.today_th() - l.next_follow_up, 0) as days_overdue,
+      l.appointment_at, l.owner_id, p.full_name as owner_name
+    from public.leads l
+    join public.projects pr on pr.id = l.project_id
+    left join public.profiles p on p.id = l.owner_id
+    where public.is_open_stage(l.stage)
+      and (p_project is null or l.project_id = p_project)
+      and case
+            when p_all and public.my_role() in ('admin', 'executive') then true
+            when p_owner is not null and public.my_role() in ('admin', 'executive') then l.owner_id = p_owner
+            else l.owner_id = auth.uid()
+          end
+  ) x
+  where bucket is not null
+  order by array_position(array['overdue', 'new', 'today', 'week'], x.bucket), x.follow_up, x.lead_name
+$$;
+
+revoke execute on function public.today_list(uuid, boolean, uuid) from public, anon;
+grant execute on function public.today_list(uuid, boolean, uuid) to authenticated, service_role;
+
+-- =====================================================================
+-- 0015_lead_channel.sql
+-- =====================================================================
+
+-- 0015 Where the customer came from (ช่องทาง): call · ads · messenger · line · walk-in.
+-- Labels live in src/config/channels.ts. Old leads stay empty. Run after 0014.
+
+alter table public.leads
+  add column channel text check (channel in ('call', 'ads', 'messenger', 'line', 'walkin'));
+
+-- =====================================================================
+-- 0016_dashboard_dropped.sql
+-- =====================================================================
+
+-- 0016 Dashboard funnel also shows the leads that dropped out (ไม่ซื้อ · ไม่มีคุณภาพ).
+-- Same function as 0006 plus the 'dropped' key. Run after 0015.
+
+create or replace function public.dashboard(p_project uuid default null, p_from date default null, p_to date default null)
+returns jsonb
+language sql stable security invoker set search_path = '' as $$
+  with rng as (
+    select coalesce(p_from, public.today_th() - 29) as d1, coalesce(p_to, public.today_th()) as d2
+  ),
+  l as (
+    select x.* from public.leads x where (p_project is null or x.project_id = p_project)
+  ),
+  inr as (select l.* from l, rng where (l.created_at at time zone 'Asia/Bangkok')::date between rng.d1 and rng.d2),
+  moves as (
+    select h.*, l.project_id, l.campaign_id from public.stage_history h join l on l.id = h.lead_id, rng
+    where (h.changed_at at time zone 'Asia/Bangkok')::date between rng.d1 and rng.d2
+  ),
+  reached as (
+    select h.lead_id, h.to_stage from public.stage_history h join inr on inr.id = h.lead_id group by 1, 2
+  ),
+  stages as (
+    select s, ord from unnest(array['new','qualified','appointment','visited','reserved','contracted','transferred']::public.lead_stage[])
+      with ordinality as t(s, ord)
+  )
+  select jsonb_build_object(
+    'from', (select d1 from rng),
+    'to', (select d2 from rng),
+    'kpi', jsonb_build_object(
+      'new_leads', (select count(*) from inr),
+      'appointments', (select count(*) from moves where to_stage = 'appointment'),
+      'reservations', (select count(*) from moves where to_stage = 'reserved'),
+      'transfers', (select count(*) from moves where to_stage = 'transferred'),
+      'overdue', (select count(*) from l where public.is_open_stage(stage) and next_follow_up < public.today_th())
+    ),
+    -- leads created in the range that reached each stage (at any time)
+    'funnel', (select jsonb_agg(jsonb_build_object(
+        'stage', s,
+        'count', (select count(distinct r.lead_id) from reached r
+                   where array_position(enum_range(null::public.lead_stage), r.to_stage)
+                         >= array_position(enum_range(null::public.lead_stage), stages.s)
+                     and r.to_stage not in ('lost', 'unqualified'))
+      ) order by ord) from stages),
+    -- 0016: how the same leads ended up dropping out (current stage): ไม่ซื้อ / ไม่มีคุณภาพ
+    'dropped', jsonb_build_object(
+      'lost', (select count(*) from inr where stage = 'lost'),
+      'unqualified', (select count(*) from inr where stage = 'unqualified')
+    ),
+    'current', (select coalesce(jsonb_object_agg(stage, n), '{}') from (select stage, count(*) n from l group by stage) c),
+    'by_project', (select coalesce(jsonb_agg(row_to_json(x) order by x.name), '[]') from (
+        select pr.id, pr.name,
+          (select count(*) from inr where inr.project_id = pr.id) as leads,
+          (select count(*) from moves m where m.project_id = pr.id and m.to_stage = 'appointment') as appointments,
+          (select count(*) from moves m where m.project_id = pr.id and m.to_stage = 'reserved') as reservations,
+          (select count(*) from moves m where m.project_id = pr.id and m.to_stage = 'transferred') as transfers,
+          (select coalesce(sum(u.price), 0) from public.units u where u.project_id = pr.id
+             and u.status in ('reserved', 'contracted', 'transferred')) as sold_value,
+          (select count(*) from public.units u where u.project_id = pr.id and u.status in ('available', 'interested')) as units_left,
+          (select coalesce(sum(u.price), 0) from public.units u where u.project_id = pr.id
+             and u.status in ('available', 'interested')) as value_left
+        from public.projects pr where p_project is null or pr.id = p_project) x),
+    'by_campaign', (select coalesce(jsonb_agg(row_to_json(x) order by x.leads desc), '[]') from (
+        select coalesce(c.name, 'ไม่ระบุแคมเปญ') as name,
+          count(*) as leads,
+          count(*) filter (where exists (select 1 from reached r where r.lead_id = inr.id and r.to_stage = 'qualified')) as qualified,
+          count(*) filter (where inr.visited_at is not null) as visited,
+          count(*) filter (where exists (select 1 from reached r where r.lead_id = inr.id and r.to_stage = 'reserved')) as reserved
+        from inr left join public.campaigns c on c.id = inr.campaign_id
+        group by c.name) x),
+    'lost_reasons', (select coalesce(jsonb_agg(row_to_json(x) order by x.count desc), '[]') from (
+        select lr.label, count(*) as count from inr join public.lost_reasons lr on lr.id = inr.lost_reason_id
+        group by lr.label) x),
+    'by_sales', (select coalesce(jsonb_agg(row_to_json(t)), '[]') from public.team_summary(p_project, p_from, p_to) t)
+  )
+$$;
+
+-- =====================================================================
+-- 0017_sales_performance.sql
+-- =====================================================================
+
+-- 0017 Sales performance per person for the ทีมขาย page: what happened IN the chosen days
+-- (not the cohort of leads created in them), plus where each person stands right now.
+-- Counted per lead (a lead moved to จอง twice counts once). Run after 0016.
+
+create function public.sales_performance(p_project uuid default null, p_from date default null, p_to date default null)
+returns table (
+  owner_id uuid, owner_name text, avatar_url text,
+  open_now bigint,        -- customers still in progress, right now
+  overdue_now bigint,     -- follow-up date already passed, right now
+  due_today bigint,       -- follow-up date is today
+  new_leads bigint,       -- leads created in the days
+  contacted bigint,       -- customers talked to (any activity) in the days
+  appointments bigint,    -- moved to นัดชม in the days
+  visits bigint,          -- moved to มาชมแล้ว in the days
+  closed bigint,          -- moved to จอง in the days
+  transfers bigint,       -- moved to โอน in the days
+  lost bigint             -- moved to ไม่ซื้อ in the days
+)
+language sql stable security invoker set search_path = '' as $$
+  with rng as (
+    select coalesce(p_from, public.today_th()) as d1, coalesce(p_to, public.today_th()) as d2
+  ),
+  l as (
+    select x.* from public.leads x where (p_project is null or x.project_id = p_project)
+  ),
+  moves as (
+    select h.lead_id, h.to_stage, l.owner_id from public.stage_history h join l on l.id = h.lead_id, rng
+    where (h.changed_at at time zone 'Asia/Bangkok')::date between rng.d1 and rng.d2
+  ),
+  acts as (
+    select a.lead_id, l.owner_id from public.activities a join l on l.id = a.lead_id, rng
+    where (a.created_at at time zone 'Asia/Bangkok')::date between rng.d1 and rng.d2
+  )
+  select p.id, p.full_name, p.avatar_url,
+    (select count(*) from l where l.owner_id = p.id and public.is_open_stage(l.stage)),
+    (select count(*) from l where l.owner_id = p.id and public.is_open_stage(l.stage) and l.next_follow_up < public.today_th()),
+    (select count(*) from l where l.owner_id = p.id and public.is_open_stage(l.stage) and l.next_follow_up = public.today_th()),
+    (select count(*) from l, rng where l.owner_id = p.id and (l.created_at at time zone 'Asia/Bangkok')::date between rng.d1 and rng.d2),
+    (select count(distinct lead_id) from acts where acts.owner_id = p.id),
+    (select count(distinct lead_id) from moves where moves.owner_id = p.id and to_stage = 'appointment'),
+    (select count(distinct lead_id) from moves where moves.owner_id = p.id and to_stage = 'visited'),
+    (select count(distinct lead_id) from moves where moves.owner_id = p.id and to_stage = 'reserved'),
+    (select count(distinct lead_id) from moves where moves.owner_id = p.id and to_stage = 'transferred'),
+    (select count(distinct lead_id) from moves where moves.owner_id = p.id and to_stage = 'lost')
+  from public.profiles p
+  where p.role = 'sales' and p.status = 'active'
+  order by p.full_name
+$$;
+
+revoke execute on function public.sales_performance(uuid, date, date) from public, anon;
+grant execute on function public.sales_performance(uuid, date, date) to authenticated, service_role;
+
+-- =====================================================================
+-- 0018_today_visits.sql
+-- =====================================================================
+
+-- 0018 "นัดชมวันนี้": customers booked to visit the project today, by time, and whether they have arrived.
+-- Same who-sees-what rules as today_list (0014): sales = own leads; admin / executive = p_all or p_owner.
+-- arrived_at = the first site-visit check-in made today (activities type 'visit'), null = not here yet.
+-- Run after 0017.
+
+create or replace function public.today_visits(p_owner uuid default null, p_all boolean default false, p_project uuid default null)
+returns table (
+  lead_id uuid, full_name text, phone text, project_name text, stage public.lead_stage,
+  appointment_at timestamptz, arrived_at timestamptz, next_follow_up date,
+  owner_id uuid, owner_name text
+)
+language sql stable security invoker set search_path = '' as $$
+  select
+    l.id, l.full_name, l.phone, pr.name, l.stage,
+    l.appointment_at,
+    (select min(a.created_at) from public.activities a
+      where a.lead_id = l.id and a.type = 'visit'
+        and (a.created_at at time zone 'Asia/Bangkok')::date = public.today_th()) as arrived_at,
+    l.next_follow_up, l.owner_id, p.full_name
+  from public.leads l
+  join public.projects pr on pr.id = l.project_id
+  left join public.profiles p on p.id = l.owner_id
+  where l.appointment_at is not null
+    and (l.appointment_at at time zone 'Asia/Bangkok')::date = public.today_th()
+    and l.stage not in ('lost', 'unqualified')
+    and (p_project is null or l.project_id = p_project)
+    and case
+          when p_all and public.my_role() in ('admin', 'executive') then true
+          when p_owner is not null and public.my_role() in ('admin', 'executive') then l.owner_id = p_owner
+          else l.owner_id = auth.uid()
+        end
+  order by l.appointment_at, l.full_name
+$$;
+
+revoke execute on function public.today_visits(uuid, boolean, uuid) from public, anon;
+grant execute on function public.today_visits(uuid, boolean, uuid) to authenticated, service_role;
+
+-- =====================================================================
+-- 0019_upcoming_visits.sql
+-- =====================================================================
+
+-- 0019 "นัดชมโครงการ" for today, tomorrow and the day after (replaces today_visits from 0018).
+-- Same who-sees-what rules as today_list (0014): sales = own leads; admin / executive = p_all or p_owner.
+-- visit_day = Thai date of the appointment. arrived_at = first site-visit check-in that day, null = not here yet.
+-- Run after 0018.
+
+drop function if exists public.today_visits(uuid, boolean, uuid);
+
+create or replace function public.upcoming_visits(
+  p_owner uuid default null, p_all boolean default false, p_project uuid default null, p_days int default 3
+)
+returns table (
+  visit_day date, lead_id uuid, full_name text, phone text, project_name text, stage public.lead_stage,
+  appointment_at timestamptz, arrived_at timestamptz, next_follow_up date,
+  owner_id uuid, owner_name text
+)
+language sql stable security invoker set search_path = '' as $$
+  select
+    (l.appointment_at at time zone 'Asia/Bangkok')::date,
+    l.id, l.full_name, l.phone, pr.name, l.stage,
+    l.appointment_at,
+    (select min(a.created_at) from public.activities a
+      where a.lead_id = l.id and a.type = 'visit'
+        and (a.created_at at time zone 'Asia/Bangkok')::date = (l.appointment_at at time zone 'Asia/Bangkok')::date),
+    l.next_follow_up, l.owner_id, p.full_name
+  from public.leads l
+  join public.projects pr on pr.id = l.project_id
+  left join public.profiles p on p.id = l.owner_id
+  where l.appointment_at >= (public.today_th()::timestamp at time zone 'Asia/Bangkok')
+    and l.appointment_at < ((public.today_th() + greatest(p_days, 1))::timestamp at time zone 'Asia/Bangkok')
+    and l.stage not in ('lost', 'unqualified')
+    and (p_project is null or l.project_id = p_project)
+    and case
+          when p_all and public.my_role() in ('admin', 'executive') then true
+          when p_owner is not null and public.my_role() in ('admin', 'executive') then l.owner_id = p_owner
+          else l.owner_id = auth.uid()
+        end
+  order by l.appointment_at, l.full_name
+$$;
+
+revoke execute on function public.upcoming_visits(uuid, boolean, uuid, int) from public, anon;
+grant execute on function public.upcoming_visits(uuid, boolean, uuid, int) to authenticated, service_role;

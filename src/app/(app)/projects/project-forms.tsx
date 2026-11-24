@@ -11,15 +11,36 @@ import { FileDropzone } from "@/components/ui/file-dropzone";
 import { ToggleRow } from "@/components/ui/toggle";
 import { resizePhoto } from "@/lib/photo-upload";
 import { createClient } from "@/lib/supabase/client";
-import { createProject, setProjectCover, updateProject, type ProjectInput } from "./actions";
+import {
+  createProject,
+  setProjectCover,
+  updateProject,
+  type ProjectInput,
+} from "./actions";
 
-export type ProjectRow = ProjectInput & { id: string; cover_path?: string | null; cover_url?: string | null };
+export type ProjectRow = ProjectInput & {
+  id: string;
+  cover_path?: string | null;
+  cover_url?: string | null;
+};
 
-const EMPTY: ProjectInput = { name: "", location: "", fb_page: "", is_open: true };
+const EMPTY: ProjectInput = {
+  name: "",
+  location: "",
+  fb_page: "",
+  is_open: true,
+};
 const COVER_BUCKET = "project-images"; // 0007_project_images.sql
 
 const formOf = (p?: ProjectRow): ProjectInput =>
-  p ? { name: p.name, location: p.location, fb_page: p.fb_page, is_open: p.is_open } : EMPTY;
+  p
+    ? {
+        name: p.name,
+        location: p.location,
+        fb_page: p.fb_page,
+        is_open: p.is_open,
+      }
+    : EMPTY;
 
 /** Shrink to 1600px JPEG in the browser, upload to <project_id>/cover-<ts>.jpg, then save it on the project. */
 async function uploadCover(projectId: string, file: File): Promise<boolean> {
@@ -27,7 +48,9 @@ async function uploadCover(projectId: string, file: File): Promise<boolean> {
     const blob = await resizePhoto(file);
     const path = `${projectId}/cover-${Date.now()}.jpg`;
     const supabase = createClient();
-    const { error } = await supabase.storage.from(COVER_BUCKET).upload(path, blob, { contentType: "image/jpeg", upsert: false });
+    const { error } = await supabase.storage
+      .from(COVER_BUCKET)
+      .upload(path, blob, { contentType: "image/jpeg", upsert: false });
     if (error) return false;
     const res = await setProjectCover(projectId, path);
     if (!res.ok) {
@@ -41,7 +64,13 @@ async function uploadCover(projectId: string, file: File): Promise<boolean> {
 }
 
 /** Add or edit a project in a bottom sheet (admin). Without `project` it adds a new one. */
-export function ProjectFormButton({ project, label }: { project?: ProjectRow; label: string }) {
+export function ProjectFormButton({
+  project,
+  label,
+}: {
+  project?: ProjectRow;
+  label: string;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<ProjectInput>(formOf(project));
@@ -52,7 +81,8 @@ export function ProjectFormButton({ project, label }: { project?: ProjectRow; la
   const [error, setError] = useState("");
   const [busy, start] = useTransition();
 
-  const set = <K extends keyof ProjectInput>(k: K, v: ProjectInput[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof ProjectInput>(k: K, v: ProjectInput[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
 
   // New key = empty dropzone (after "เอารูปปกออก" or closing the sheet).
   const [dropKey, setDropKey] = useState(0);
@@ -89,7 +119,9 @@ export function ProjectFormButton({ project, label }: { project?: ProjectRow; la
 
       if (file) {
         if (!(await uploadCover(id, file))) {
-          return setError("บันทึกโครงการแล้ว แต่อัปโหลดรูปปกไม่สำเร็จ ลองเลือกรูปใหม่แล้วกดบันทึกอีกครั้ง (ไฟล์ JPG, PNG หรือ WebP)");
+          return setError(
+            "บันทึกโครงการแล้ว แต่อัปโหลดรูปปกไม่สำเร็จ ลองเลือกรูปใหม่แล้วกดบันทึกอีกครั้ง (ไฟล์ JPG, PNG หรือ WebP)",
+          );
         }
       } else if (removeCover && project?.cover_path) {
         const res = await setProjectCover(id, null);
@@ -110,10 +142,18 @@ export function ProjectFormButton({ project, label }: { project?: ProjectRow; la
 
   return (
     <>
-      <Button variant={project ? "secondary" : "primary"} onClick={() => setOpen(true)}>
+      <Button
+        variant={project ? "secondary" : "primary"}
+        icon={project ? "edit" : "add"}
+        onClick={() => setOpen(true)}
+      >
         {label}
       </Button>
-      <Sheet open={open} onClose={close} title={project ? `แก้ไข ${project.name}` : "เพิ่มโครงการ"}>
+      <Sheet
+        open={open}
+        onClose={close}
+        title={project ? `แก้ไข ${project.name}` : "เพิ่มโครงการ"}
+      >
         <form
           className="flex flex-col gap-3"
           onSubmit={(e) => {
@@ -123,10 +163,18 @@ export function ProjectFormButton({ project, label }: { project?: ProjectRow; la
         >
           {error && <Notice tone="danger">{error}</Notice>}
           <Field label="ชื่อโครงการ" required>
-            <Input value={form.name} onChange={(e) => set("name", e.target.value)} required />
+            <Input
+              value={form.name}
+              onChange={(e) => set("name", e.target.value)}
+              required
+            />
           </Field>
           <Field label="ที่ตั้ง">
-            <Input value={form.location} onChange={(e) => set("location", e.target.value)} placeholder="เช่น บางนา กม.12" />
+            <Input
+              value={form.location}
+              onChange={(e) => set("location", e.target.value)}
+              placeholder="เช่น บางนา กม.12"
+            />
           </Field>
           <Field label="เพจ Facebook" hint="ลิงก์เพจของโครงการ ไม่บังคับ">
             <Input
@@ -138,12 +186,16 @@ export function ProjectFormButton({ project, label }: { project?: ProjectRow; la
           </Field>
 
           <div className="flex flex-col gap-2">
-            <p className="font-medium">รูปปกโครงการ</p>
+            <p className="text-sm font-medium">รูปปกโครงการ</p>
             <FileDropzone
               key={dropKey}
               accept="image/jpeg,image/png,image/webp"
               maxSizeMB={20}
-              prompt={hasCover ? "ลากรูปปกใหม่มาวาง หรือแตะเพื่อเลือก" : "ลากรูปปกมาวาง หรือแตะเพื่อเลือก"}
+              prompt={
+                hasCover
+                  ? "ลากรูปปกใหม่มาวาง หรือแตะเพื่อเลือก"
+                  : "ลากรูปปกมาวาง หรือแตะเพื่อเลือก"
+              }
               hint="JPG, PNG หรือ WebP · รูปแนวนอนดูสวยที่สุด ระบบย่อรูปให้ก่อนอัปโหลด"
               disabled={busy}
               currentUrl={removeCover ? null : (project?.cover_url ?? null)}
@@ -163,6 +215,7 @@ export function ProjectFormButton({ project, label }: { project?: ProjectRow; la
                 <Button
                   variant="ghost"
                   className="text-danger"
+                  icon="remove"
                   disabled={busy}
                   onClick={() => {
                     setFile(null);
@@ -183,7 +236,11 @@ export function ProjectFormButton({ project, label }: { project?: ProjectRow; la
             onChange={(v) => set("is_open", v)}
           />
           <Button type="submit" full disabled={busy || !form.name.trim()}>
-            {busy ? "กำลังบันทึก" : project || createdId ? "บันทึกโครงการ" : "เพิ่มโครงการ"}
+            {busy
+              ? "กำลังบันทึก"
+              : project || createdId
+                ? "บันทึกโครงการ"
+                : "เพิ่มโครงการ"}
           </Button>
         </form>
       </Sheet>

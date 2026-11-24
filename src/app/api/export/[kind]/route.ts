@@ -12,7 +12,7 @@ import { getMe } from "@/lib/auth";
 import { nameForMeta } from "@/lib/meta";
 import { csvResponse, toCsv, type CsvColumn } from "@/lib/csv";
 import { createClient } from "@/lib/supabase/server";
-import { fetchAllRpc } from "./fetch-all";
+import { fetchAllRpc } from "@/lib/fetch-all";
 
 const TZ = "Asia/Bangkok";
 

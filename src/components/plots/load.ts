@@ -1,4 +1,5 @@
 // Server-side loaders for plot data. Call only from Server Components or Server Actions.
+import { fetchAllRpc } from "@/lib/fetch-all";
 import type { createClient } from "@/lib/supabase/server";
 import type { BoardUnit, PlanView, ProjectOption } from "./types";
 
@@ -12,10 +13,11 @@ export async function loadProjects(db: Db): Promise<ProjectOption[]> {
   return (data ?? []) as ProjectOption[];
 }
 
-/** Every plot of a project, in one RPC call. Returns [] when the user cannot see the project. */
+/** Every plot of a project (read 1,000 at a time, so a big project is never cut off).
+ *  Returns [] when the user cannot see the project. */
 export async function loadBoard(db: Db, projectId: string): Promise<BoardUnit[]> {
-  const { data } = await db.rpc("unit_board", { p_project: projectId });
-  return (data ?? []) as BoardUnit[];
+  const { rows } = await fetchAllRpc<BoardUnit>(db, "unit_board", { p_project: projectId });
+  return rows;
 }
 
 /** Site plans of a project with a 1-hour signed URL of each picture (the bucket is private). */

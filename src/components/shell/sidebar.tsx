@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { activeHref } from "@/components/app-nav";
 import { APP } from "@/config/app";
@@ -30,9 +31,20 @@ const iconBtn =
   "flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-ink-soft transition-colors hover:bg-sidebar-hover hover:text-sidebar-ink-hover";
 
 /** Left menu from 768px, like aoocommerce's AppSidebar: logo row on top, menu rows, collapse to an icon rail. */
-export function Sidebar({ items, homeHref }: { items: MenuItem[]; homeHref: string }) {
+/** `top`: the project picker, shown under the logo row. */
+export function Sidebar({
+  items,
+  homeHref,
+  top,
+}: {
+  items: MenuItem[];
+  homeHref: string;
+  top?: ReactNode;
+}) {
   const pathname = usePathname();
   const active = activeHref(items, pathname);
+  const main = items.filter((i) => !i.bottom);
+  const pinned = items.filter((i) => i.bottom);
 
   return (
     <aside
@@ -41,58 +53,102 @@ export function Sidebar({ items, homeHref }: { items: MenuItem[]; homeHref: stri
     >
       {/* Logo row — h-16 so its bottom line meets the top bar's */}
       <div className="nav-logo-row flex h-16 shrink-0 items-center gap-2 border-b border-line px-3">
-        <Link href={homeHref} className="nav-logo flex min-h-11 min-w-0 flex-1 items-center gap-2 pl-1 font-bold text-ink">
-          <Image src={APP.logo} alt={`โลโก้ ${APP.name}`} width={32} height={32} className="h-8 w-8 shrink-0" priority />
+        <Link
+          href={homeHref}
+          className="nav-logo flex min-h-11 min-w-0 flex-1 items-center gap-2 pl-1 font-bold text-ink"
+        >
+          <Image
+            src={APP.logo}
+            alt={`โลโก้ ${APP.name}`}
+            width={32}
+            height={32}
+            className="h-8 w-8 shrink-0"
+            priority
+          />
           <span className="nav-logo-name truncate text-lg">{APP.name}</span>
         </Link>
         <Tooltip text="ย่อเมนู" position="bottom">
-          <button type="button" onClick={toggleCollapsed} aria-label="ย่อเมนู" className={`nav-collapse-top ${iconBtn}`}>
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-label="ย่อเมนู"
+            className={`nav-collapse-top ${iconBtn}`}
+          >
             <CollapseMenuIcon className="h-[18px] w-[18px]" aria-hidden />
           </button>
         </Tooltip>
       </div>
 
+      {top && <div className="shrink-0 border-b border-line p-3">{top}</div>}
+
       <nav aria-label="เมนูหลัก" className="flex-1 overflow-y-auto p-3">
         {/* Rail only: the expand button sits above the menu (the logo row is too narrow for both) */}
         <Tooltip text="ขยายเมนู" position="bottom">
-          <button type="button" onClick={toggleCollapsed} aria-label="ขยายเมนู" className={`nav-expand-rail mx-auto mb-1 ${iconBtn}`}>
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-label="ขยายเมนู"
+            className={`nav-expand-rail mx-auto mb-1 ${iconBtn}`}
+          >
             <ExpandMenuIcon className="h-[18px] w-[18px]" aria-hidden />
           </button>
         </Tooltip>
         {/* Menu rows in the collapsed rail show their label as the CSS tooltip in globals.css
             (it only exists while collapsed, so no shared Tooltip here: that would show twice). */}
         <ul className="flex flex-col gap-0.5">
-          {items.map((item, i) => {
+          {main.map((item, i) => {
             const on = item.href === active;
-            const Icon = MENU_ICON[item.icon];
-            const newGroup = item.group && item.group !== items[i - 1]?.group;
+            const newGroup = item.group && item.group !== main[i - 1]?.group;
             return (
               <li key={item.href}>
                 {newGroup && (
-                  <h3 className={`nav-section-title px-3 pb-1.5 text-xs font-semibold tracking-wide text-sidebar-title ${i === 0 ? "pt-1" : "pt-5"}`}>
+                  <h3
+                    className={`nav-section-title px-3 pb-1.5 text-xs font-semibold tracking-wide text-sidebar-title ${i === 0 ? "pt-1" : "pt-5"}`}
+                  >
                     {item.group}
                   </h3>
                 )}
-                <Link
-                  href={item.href}
-                  aria-label={item.label}
-                  aria-current={on ? "page" : undefined}
-                  className={`flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-sm transition-colors ${
-                    on
-                      ? "bg-sidebar-active font-semibold text-sidebar-active-ink"
-                      : "font-medium text-sidebar-ink hover:bg-sidebar-hover hover:text-sidebar-ink-hover"
-                  }`}
-                >
-                  <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden />
-                  <span className="nav-label truncate" aria-hidden>
-                    {item.label}
-                  </span>
-                </Link>
+                <MenuLink item={item} on={on} />
               </li>
             );
           })}
         </ul>
       </nav>
+
+      {/* Sticky footer: settings sit at the very bottom, like the aoo apps */}
+      {pinned.length > 0 && (
+        <nav aria-label="เมนูท้าย" className="shrink-0 border-t border-line p-3">
+          <ul className="flex flex-col gap-0.5">
+            {pinned.map((item) => (
+              <li key={item.href}>
+                <MenuLink item={item} on={item.href === active} />
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
     </aside>
+  );
+}
+
+/** One menu row. Collapsed rail: icon only, the label shows as the CSS tooltip in globals.css. */
+function MenuLink({ item, on }: { item: MenuItem; on: boolean }) {
+  const Icon = MENU_ICON[item.icon];
+  return (
+    <Link
+      href={item.href}
+      aria-label={item.label}
+      aria-current={on ? "page" : undefined}
+      className={`flex min-h-11 w-full items-center gap-3 rounded-control px-3 text-sm transition-colors ${
+        on
+          ? "bg-sidebar-active font-semibold text-sidebar-active-ink"
+          : "font-medium text-sidebar-ink hover:bg-sidebar-hover hover:text-sidebar-ink-hover"
+      }`}
+    >
+      <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden />
+      <span className="nav-label truncate" aria-hidden>
+        {item.label}
+      </span>
+    </Link>
   );
 }

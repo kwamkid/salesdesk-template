@@ -16,10 +16,12 @@
  *
  * Column render functions make this a client component: build `columns` in a "use client" file.
  */
+import { startNav } from "@/components/shell/nav-progress";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { SortAscIcon, SortDescIcon, SortNoneIcon } from "@/lib/icons";
+import { ColumnsIcon, SortAscIcon, SortDescIcon, SortNoneIcon } from "@/lib/icons";
+import { Tooltip } from "./tooltip";
 import { Popover } from "./popover";
 
 export interface DataTableColumn<T> {
@@ -68,6 +70,8 @@ export interface DataTableProps<T> {
   footer?: ReactNode;
   /** Name of the table for screen readers */
   caption?: string;
+  /** Left of the bar under the table (e.g. "ทั้งหมด 63 ราย"); the column picker icon sits on its right. */
+  summary?: ReactNode;
   className?: string;
 }
 
@@ -109,6 +113,7 @@ export function DataTable<T>({
   initialSort,
   footer,
   caption,
+  summary,
   className = "",
 }: DataTableProps<T>) {
   const router = useRouter();
@@ -160,7 +165,10 @@ export function DataTable<T>({
     if (onRowClick) onRowClick(row);
     else {
       const href = rowHref?.(row);
-      if (href) router.push(href);
+      if (href) {
+        startNav();
+        router.push(href);
+      }
     }
   };
 
@@ -170,10 +178,8 @@ export function DataTable<T>({
 
   return (
     <div className={`flex min-w-0 flex-col gap-2 ${className}`}>
-      {storageKey && <ColumnMenu columns={columns} hidden={hidden} onChange={saveHidden} className={tableShow} />}
-
       <div className={`${tableShow} overflow-x-auto rounded-card border border-line bg-surface shadow-card`}>
-        <table className="w-full border-collapse text-left text-sm">
+        <table className="w-full border-collapse text-left text-base font-normal">
           {caption && <caption className="sr-only">{caption}</caption>}
           <thead className="bg-bg text-ink-soft">
             <tr>
@@ -184,7 +190,7 @@ export function DataTable<T>({
                   <th
                     key={col.key}
                     scope="col"
-                    className={`border-b border-line px-4 py-3 font-medium whitespace-nowrap ${align}`}
+                    className={`border-b border-line px-4 py-3 text-sm font-medium whitespace-nowrap ${align}`}
                     style={col.width != null ? { width: col.width } : undefined}
                     aria-sort={active ? (sort.direction === "asc" ? "ascending" : "descending") : undefined}
                   >
@@ -313,6 +319,13 @@ export function DataTable<T>({
       </div>
 
       {footer}
+
+      {(summary || storageKey) && (
+        <div className="flex min-h-11 items-center justify-between gap-3">
+          <div className="min-w-0 text-sm text-ink-soft">{summary}</div>
+          {storageKey && <ColumnMenu columns={columns} hidden={hidden} onChange={saveHidden} className={tableShow} />}
+        </div>
+      )}
     </div>
   );
 }
@@ -332,17 +345,20 @@ function ColumnMenu<T>({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLButtonElement>(null);
   return (
-    <div className={`${className} self-end`}>
-      <button
-        ref={ref}
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        className="inline-flex min-h-11 items-center gap-2 rounded-control border border-line-strong bg-surface px-3 text-sm font-medium hover:bg-bg"
-      >
-        คอลัมน์
-        {hidden.length > 0 && <span className="text-ink-soft">(ซ่อน {hidden.length})</span>}
-      </button>
+    <div className={className}>
+      <Tooltip text={hidden.length ? `เลือกคอลัมน์ (ซ่อน ${hidden.length})` : "เลือกคอลัมน์"}>
+        <button
+          ref={ref}
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-label="เลือกคอลัมน์ที่แสดง"
+          className="relative inline-flex h-11 w-11 items-center justify-center rounded-control text-ink-soft hover:bg-bg hover:text-ink"
+        >
+          <ColumnsIcon className="h-5 w-5" aria-hidden />
+          {hidden.length > 0 && <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-brand" aria-hidden />}
+        </button>
+      </Tooltip>
       <Popover open={open} onClose={() => setOpen(false)} anchorRef={ref} width={240} ariaLabel="เลือกคอลัมน์ที่แสดง">
         <p className="mb-1 text-sm font-semibold">คอลัมน์ที่แสดง</p>
         <ul className="flex flex-col">
@@ -366,7 +382,7 @@ function ColumnMenu<T>({
           })}
         </ul>
         {hidden.length > 0 && (
-          <button type="button" onClick={() => onChange([])} className="mt-1 min-h-11 text-sm font-medium text-brand hover:underline">
+          <button type="button" onClick={() => onChange([])} className="mt-1 min-h-11 text-sm link">
             แสดงทุกคอลัมน์
           </button>
         )}

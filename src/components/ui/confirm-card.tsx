@@ -25,7 +25,14 @@ export function Sheet({
   footer?: ReactNode;
 }) {
   return (
-    <Modal open={open} onClose={onClose} title={title} size={size} footer={footer} mobileSheet>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      size={size}
+      footer={footer}
+      mobileSheet
+    >
       {children}
     </Modal>
   );
@@ -64,7 +71,13 @@ export function ConfirmCard({
       mobileSheet
       footer={
         <div className="flex flex-col gap-2">
-          <Button variant={danger ? "danger" : "primary"} full disabled={busy} onClick={onConfirm}>
+          <Button
+            variant={danger ? "danger" : "primary"}
+            icon={/ลบ/.test(confirmLabel) ? "delete" : undefined}
+            full
+            disabled={busy}
+            onClick={onConfirm}
+          >
             {busy ? "กำลังบันทึก" : confirmLabel}
           </Button>
           <Button variant="secondary" full onClick={onClose}>
@@ -75,13 +88,18 @@ export function ConfirmCard({
     >
       <dl className="flex flex-col gap-2">
         {rows.map((r) => (
-          <div key={r.label} className="flex justify-between gap-4 border-b border-line pb-2 text-sm">
+          <div
+            key={r.label}
+            className="flex justify-between gap-4 border-b border-line pb-2 text-sm"
+          >
             <dt className="text-ink-soft">{r.label}</dt>
             <dd className="text-right font-medium">{r.value}</dd>
           </div>
         ))}
       </dl>
-      {consequence && <p className="mt-3 text-sm text-ink-soft">{consequence}</p>}
+      {consequence && (
+        <p className="mt-3 text-sm text-ink-soft">{consequence}</p>
+      )}
     </Modal>
   );
 }

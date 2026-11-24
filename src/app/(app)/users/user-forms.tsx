@@ -10,10 +10,17 @@ import { CopyField } from "@/components/ui/copy-field";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Field } from "@/components/ui/field";
 import { FormSelect } from "@/components/ui/form-select";
+import { Modal } from "@/components/ui/modal";
+import { IconButton } from "@/components/ui/icon-button";
 import { MultiSelectSearch } from "@/components/ui/multi-select-search";
 import { ROLE_LABEL, ROLES, type Role } from "@/config/roles";
 import { DeleteIcon, EditIcon, TeamIcon } from "@/lib/icons";
-import { countOwnedLeads, createInvite, transferAllLeads, updateUser } from "./actions";
+import {
+  countOwnedLeads,
+  createInvite,
+  transferAllLeads,
+  updateUser,
+} from "./actions";
 
 export type UserRow = {
   id: string;
@@ -42,7 +49,12 @@ function ProjectChecks({
   value: string[];
   onChange: (ids: string[]) => void;
 }) {
-  if (projects.length === 0) return <p className="text-sm text-ink-soft">ยังไม่มีโครงการ เพิ่มได้ที่เมนูโครงการ แล้วกลับมามอบหมายทีหลัง</p>;
+  if (projects.length === 0)
+    return (
+      <p className="text-sm text-ink-soft">
+        ยังไม่มีโครงการ เพิ่มได้ที่เมนูโครงการ แล้วกลับมามอบหมายทีหลัง
+      </p>
+    );
   return (
     <div className="flex flex-col gap-1">
       <span className="text-sm font-medium">โครงการที่ดูแล</span>
@@ -59,7 +71,13 @@ function ProjectChecks({
 }
 
 /** Row on the admin's waiting list. The approve button stays grey until a role is chosen. */
-export function ApproveCard({ user, projects }: { user: UserRow; projects: ProjectOption[] }) {
+export function ApproveCard({
+  user,
+  projects,
+}: {
+  user: UserRow;
+  projects: ProjectOption[];
+}) {
   const [role, setRole] = useState<Role | "">("");
   const [projectIds, setProjectIds] = useState<string[]>([]);
   const [error, setError] = useState("");
@@ -68,24 +86,44 @@ export function ApproveCard({ user, projects }: { user: UserRow; projects: Proje
   const approve = () =>
     start(async () => {
       if (!role) return;
-      const res = await updateUser({ userId: user.id, role, status: "active", projectIds });
+      const res = await updateUser({
+        userId: user.id,
+        role,
+        status: "active",
+        projectIds,
+      });
       if (!res.ok) setError(ERROR[res.error] ?? ERROR.failed);
     });
 
   return (
     <Card className="flex flex-col gap-3">
       <div className="flex min-w-0 items-center gap-3">
-        <Avatar name={user.full_name || user.email} url={user.avatar_url} size="lg" />
+        <Avatar
+          name={user.full_name || user.email}
+          url={user.avatar_url}
+          size="lg"
+        />
         <div className="min-w-0">
-          <p className="font-medium">{user.full_name || "ไม่ได้ใส่ชื่อ"}</p>
+          <p className="break-words">{user.full_name || "ไม่ได้ใส่ชื่อ"}</p>
           <p className="truncate text-sm text-ink-soft">{user.email}</p>
         </div>
       </div>
       {error && <Notice tone="danger">{error}</Notice>}
       <Field label="ระดับผู้ใช้" required>
-        <FormSelect options={ROLE_OPTIONS} value={role} onChange={(v) => setRole(v as Role | "")} placeholder="เลือกระดับ" />
+        <FormSelect
+          options={ROLE_OPTIONS}
+          value={role}
+          onChange={(v) => setRole(v as Role | "")}
+          placeholder="เลือกระดับ"
+        />
       </Field>
-      {role && role !== "admin" && <ProjectChecks projects={projects} value={projectIds} onChange={setProjectIds} />}
+      {role && role !== "admin" && (
+        <ProjectChecks
+          projects={projects}
+          value={projectIds}
+          onChange={setProjectIds}
+        />
+      )}
       <Button full disabled={!role || busy} onClick={approve}>
         {busy ? "กำลังบันทึก" : role ? `อนุมัติเป็น${ROLE_LABEL[role]}` : "อนุมัติ"}
       </Button>
@@ -109,29 +147,71 @@ export function UsersTable({
   const projectsOf = (u: UserRow) => {
     if (u.role === "admin") return "-";
     const names = u.projectIds.map((id) => projectName.get(id)).filter(Boolean);
-    return names.length ? names.join(" · ") : u.role === "executive" ? "ทุกโครงการ" : "ยังไม่มีโครงการ";
+    return names.length
+      ? names.join(" · ")
+      : u.role === "executive"
+        ? "ทุกโครงการ"
+        : "ยังไม่มีโครงการ";
   };
   const statusBadge = (u: UserRow) =>
-    u.status === "disabled" ? <Badge tone="danger">ปิดสิทธิ์แล้ว</Badge> : u.status === "pending" ? <Badge tone="warn">รออนุมัติ</Badge> : <Badge tone="ok">ใช้งานอยู่</Badge>;
+    u.status === "disabled" ? (
+      <Badge tone="danger">ปิดสิทธิ์แล้ว</Badge>
+    ) : u.status === "pending" ? (
+      <Badge tone="warn">รออนุมัติ</Badge>
+    ) : (
+      <Badge tone="ok">ใช้งานอยู่</Badge>
+    );
   const nameCell = (u: UserRow) => (
     <div className="flex min-w-0 items-center gap-3">
       <Avatar name={nameOf(u)} url={u.avatar_url} size="lg" />
       <div className="min-w-0">
-        <p className="truncate font-medium">
-          {nameOf(u)} {u.id === meId && <span className="text-sm text-ink-soft">(คุณ)</span>}
+        <p className="truncate">
+          {nameOf(u)}{" "}
+          {u.id === meId && <span className="text-sm text-ink-soft">(คุณ)</span>}
         </p>
         <p className="truncate text-sm text-ink-soft">{u.email}</p>
       </div>
     </div>
   );
-  const actions = (u: UserRow) => <UserActions user={u} projects={projects} isMe={u.id === meId} targets={targets} />;
+  const actions = (u: UserRow) => (
+    <UserActions
+      user={u}
+      projects={projects}
+      isMe={u.id === meId}
+      targets={targets}
+    />
+  );
 
   const columns: DataTableColumn<UserRow>[] = [
-    { key: "full_name", header: "ผู้ใช้", sortable: true, sortValue: nameOf, render: nameCell },
-    { key: "role", header: "ระดับ", sortable: true, sortValue: (u) => ROLE_LABEL[u.role], render: (u) => <Badge tone="brand">{ROLE_LABEL[u.role]}</Badge> },
-    { key: "projects", header: "โครงการ", render: (u) => <span className="text-ink-soft">{projectsOf(u)}</span> },
+    {
+      key: "full_name",
+      header: "ผู้ใช้",
+      sortable: true,
+      sortValue: nameOf,
+      render: nameCell,
+    },
+    {
+      key: "role",
+      header: "ระดับ",
+      sortable: true,
+      sortValue: (u) => ROLE_LABEL[u.role],
+      render: (u) => <Badge tone="brand">{ROLE_LABEL[u.role]}</Badge>,
+    },
+    {
+      key: "projects",
+      header: "โครงการ",
+      render: (u) => <span className="text-ink-soft">{projectsOf(u)}</span>,
+    },
     { key: "status", header: "สถานะ", sortable: true, render: statusBadge },
-    { key: "actions", header: <span className="sr-only">ตัวเลือก</span>, label: "ตัวเลือก", align: "right", hideable: false, width: 64, render: actions },
+    {
+      key: "actions",
+      header: <span className="sr-only">ตัวเลือก</span>,
+      label: "ตัวเลือก",
+      align: "right",
+      hideable: false,
+      width: 112,
+      render: actions,
+    },
   ];
 
   return (
@@ -181,7 +261,12 @@ function UserActions({
 
   const save = (status: "active" | "disabled") =>
     start(async () => {
-      const res = await updateUser({ userId: user.id, role, status, projectIds });
+      const res = await updateUser({
+        userId: user.id,
+        role,
+        status,
+        projectIds,
+      });
       if (res.ok) {
         setOpen(false);
         setConfirm(false);
@@ -194,28 +279,76 @@ function UserActions({
     });
 
   return (
-    <>
+    <div className="flex items-center justify-end gap-1">
+      <IconButton
+        kind="edit"
+        label={`แก้ไขระดับและโครงการของ ${nameOf(user)}`}
+        onClick={() => setOpen(true)}
+      />
       <ActionMenu
         label={`ตัวเลือกของ ${nameOf(user)}`}
         items={[
-          { key: "edit", label: user.status === "active" ? "แก้ไขระดับและโครงการ" : "แก้ไขและเปิดสิทธิ์", icon: <EditIcon />, onClick: () => setOpen(true), primary: true },
-          { key: "move", label: "ย้ายลีดทั้งหมด", icon: <TeamIcon />, onClick: () => setTransfer(true) },
+          {
+            key: "edit",
+            label:
+              user.status === "active" ? "แก้ไขระดับและโครงการ" : "แก้ไขและเปิดสิทธิ์",
+            icon: <EditIcon />,
+            onClick: () => setOpen(true),
+            primary: true,
+          },
+          {
+            key: "move",
+            label: "ย้ายลีดทั้งหมด",
+            icon: <TeamIcon />,
+            onClick: () => setTransfer(true),
+          },
           ...(user.status === "active" && !isMe
-            ? [{ key: "disable", label: "ปิดสิทธิ์ผู้ใช้", icon: <DeleteIcon />, onClick: () => setConfirm(true), danger: true, dividerBefore: true }]
+            ? [
+                {
+                  key: "disable",
+                  label: "ปิดสิทธิ์ผู้ใช้",
+                  icon: <DeleteIcon />,
+                  onClick: () => setConfirm(true),
+                  danger: true,
+                  dividerBefore: true,
+                },
+              ]
             : []),
         ]}
       />
 
-      <Sheet open={open && !confirm} onClose={() => setOpen(false)} title={nameOf(user)}>
+      <Sheet
+        open={open && !confirm}
+        onClose={() => setOpen(false)}
+        title={nameOf(user)}
+      >
         <div className="flex flex-col gap-4">
           {error && <Notice tone="danger">{error}</Notice>}
           <Field label="ระดับผู้ใช้">
-            <FormSelect options={ROLE_OPTIONS} value={role} onChange={(v) => setRole(v as Role)} />
+            <FormSelect
+              options={ROLE_OPTIONS}
+              value={role}
+              onChange={(v) => setRole(v as Role)}
+            />
           </Field>
-          {role !== "admin" && <ProjectChecks projects={projects} value={projectIds} onChange={setProjectIds} />}
-          {role === "executive" && <p className="text-sm text-ink-soft">ผู้บริหารที่ไม่ได้เลือกโครงการ จะเห็นทุกโครงการ</p>}
+          {role !== "admin" && (
+            <ProjectChecks
+              projects={projects}
+              value={projectIds}
+              onChange={setProjectIds}
+            />
+          )}
+          {role === "executive" && (
+            <p className="text-sm text-ink-soft">
+              ผู้บริหารที่ไม่ได้เลือกโครงการ จะเห็นทุกโครงการ
+            </p>
+          )}
           <Button full disabled={busy} onClick={() => save("active")}>
-            {busy ? "กำลังบันทึก" : user.status === "active" ? "บันทึก" : "บันทึกและเปิดสิทธิ์"}
+            {busy
+              ? "กำลังบันทึก"
+              : user.status === "active"
+                ? "บันทึก"
+                : "บันทึกและเปิดสิทธิ์"}
           </Button>
         </div>
       </Sheet>
@@ -238,11 +371,13 @@ function UserActions({
 
       <TransferLeads
         user={user}
-        targets={targets.filter((t) => t.id !== user.id && t.status === "active")}
+        targets={targets.filter(
+          (t) => t.id !== user.id && t.status === "active",
+        )}
         open={transfer}
         onClose={() => setTransfer(false)}
       />
-    </>
+    </div>
   );
 }
 
@@ -262,7 +397,10 @@ function TransferLeads({
 }) {
   const [toId, setToId] = useState("");
   const [count, setCount] = useState<number | null>(null);
-  const [msg, setMsg] = useState<{ tone: "ok" | "warn" | "danger"; text: string } | null>(null);
+  const [msg, setMsg] = useState<{
+    tone: "ok" | "warn" | "danger";
+    text: string;
+  } | null>(null);
   const [busy, start] = useTransition();
   const target = targets.find((t) => t.id === toId);
 
@@ -276,8 +414,10 @@ function TransferLeads({
   const next = () =>
     start(async () => {
       const res = await countOwnedLeads(user.id);
-      if (!res.ok) return setMsg({ tone: "danger", text: "นับจำนวนลีดไม่สำเร็จ ลองใหม่อีกครั้ง" });
-      if (res.count === 0) return setMsg({ tone: "warn", text: `${nameOf(user)} ไม่มีลีดให้ย้าย` });
+      if (!res.ok)
+        return setMsg({ tone: "danger", text: "นับจำนวนลีดไม่สำเร็จ ลองใหม่อีกครั้ง" });
+      if (res.count === 0)
+        return setMsg({ tone: "warn", text: `${nameOf(user)} ไม่มีลีดให้ย้าย` });
       setMsg(null);
       setCount(res.count);
     });
@@ -288,22 +428,37 @@ function TransferLeads({
       setCount(null);
       setMsg(
         res.ok
-          ? { tone: "ok", text: `ย้ายแล้ว ${res.moved} ราย ไปให้ ${target ? nameOf(target) : ""}` }
+          ? {
+              tone: "ok",
+              text: `ย้ายแล้ว ${res.moved} ราย ไปให้ ${target ? nameOf(target) : ""}`,
+            }
           : { tone: "danger", text: "ย้ายลีดไม่สำเร็จ ผู้รับต้องเป็นผู้ใช้ที่เปิดสิทธิ์อยู่" },
       );
     });
 
   return (
     <>
-      <Sheet open={open && count === null} onClose={close} title={`ย้ายลีดทั้งหมดของ ${nameOf(user)}`}>
+      <Sheet
+        open={open && count === null}
+        onClose={close}
+        title={`ย้ายลีดทั้งหมดของ ${nameOf(user)}`}
+      >
         <div className="flex flex-col gap-4">
           {msg && <Notice tone={msg.tone}>{msg.text}</Notice>}
           {targets.length === 0 ? (
             <p className="text-sm text-ink-soft">ยังไม่มีผู้ใช้คนอื่นที่เปิดสิทธิ์อยู่ให้รับลีด</p>
           ) : (
-            <Field label="ย้ายไปให้" hint="ลีดทุกขั้นของคนนี้จะเป็นของผู้รับ รวมลูกค้าที่ปิดการขายแล้ว">
+            <Field
+              label="ย้ายไปให้"
+              hint="ลีดทุกขั้นของคนนี้จะเป็นของผู้รับ รวมลูกค้าที่ปิดการขายแล้ว"
+            >
               <FormSelect
-                options={targets.map((t) => ({ id: t.id, label: nameOf(t), subtitle: ROLE_LABEL[t.role] }))}
+                options={targets.map((t) => ({
+                  id: t.id,
+                  label: nameOf(t),
+                  subtitle: ROLE_LABEL[t.role],
+                  icon: <Avatar name={nameOf(t)} url={t.avatar_url} size="sm" />,
+                }))}
                 value={toId}
                 onChange={setToId}
                 placeholder="เลือกผู้รับ"
@@ -312,7 +467,11 @@ function TransferLeads({
             </Field>
           )}
           <Button full disabled={!toId || busy} onClick={next}>
-            {busy ? "กำลังนับลีด" : target ? `ถัดไป: ย้ายให้ ${nameOf(target)}` : "ถัดไป"}
+            {busy
+              ? "กำลังนับลีด"
+              : target
+                ? `ถัดไป: ย้ายให้ ${nameOf(target)}`
+                : "ถัดไป"}
           </Button>
         </div>
       </Sheet>
@@ -324,7 +483,12 @@ function TransferLeads({
         title={`ย้ายลีด ${count ?? 0} รายของ ${nameOf(user)} ไปให้ ${target ? nameOf(target) : ""}`}
         rows={[
           { label: "จาก", value: nameOf(user) },
-          { label: "ไปให้", value: target ? `${nameOf(target)} (${ROLE_LABEL[target.role]})` : "-" },
+          {
+            label: "ไปให้",
+            value: target
+              ? `${nameOf(target)} (${ROLE_LABEL[target.role]})`
+              : "-",
+          },
           { label: "จำนวนลีด", value: `${count ?? 0} ราย` },
         ]}
         consequence="ลีดทั้งหมดจะเป็นของผู้รับทันที ผู้รับได้แจ้งเตือนลีดใหม่ ถ้าต้องการย้ายกลับต้องทำซ้ำจากอีกฝั่ง ซึ่งจะย้ายลีดเดิมของผู้รับไปด้วย"
@@ -336,7 +500,35 @@ function TransferLeads({
 }
 
 /** Creates a single-use invite link to copy and send over LINE. */
-export function InviteForm({ projects }: { projects: ProjectOption[] }) {
+/** "เชิญพนักงาน" button (top right of the page) that opens the invite form in a modal. */
+export function InviteButton({ projects }: { projects: ProjectOption[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button icon="add" onClick={() => setOpen(true)}>
+        เชิญพนักงาน
+      </Button>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="เชิญพนักงาน"
+        size="md"
+        mobileSheet
+      >
+        {/* key: a fresh form (and no old link) every time it opens */}
+        {open && <InviteForm projects={projects} bare />}
+      </Modal>
+    </>
+  );
+}
+
+export function InviteForm({
+  projects,
+  bare = false,
+}: {
+  projects: ProjectOption[];
+  bare?: boolean;
+}) {
   const [role, setRole] = useState<Role>("sales");
   const [projectIds, setProjectIds] = useState<string[]>([]);
   const [days, setDays] = useState(7);
@@ -346,22 +538,40 @@ export function InviteForm({ projects }: { projects: ProjectOption[] }) {
 
   const create = () =>
     start(async () => {
-      const res = await createInvite({ role, projectIds: role === "admin" ? [] : projectIds, days });
+      const res = await createInvite({
+        role,
+        projectIds: role === "admin" ? [] : projectIds,
+        days,
+      });
       setError(!res.ok);
       if (res.ok) setLink(`${window.location.origin}/invite/${res.token}`);
     });
 
+  const Box = bare ? "div" : Card;
   return (
-    <Card className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold">เชิญผู้ใช้</h2>
+    <Box className="flex flex-col gap-4">
+      {!bare && <h2 className="text-lg font-semibold">เชิญพนักงาน</h2>}
       {error && <Notice tone="danger">สร้างลิงก์ไม่สำเร็จ ลองใหม่อีกครั้ง</Notice>}
       <Field label="ระดับผู้ใช้">
-        <FormSelect options={ROLE_OPTIONS} value={role} onChange={(v) => setRole(v as Role)} />
+        <FormSelect
+          options={ROLE_OPTIONS}
+          value={role}
+          onChange={(v) => setRole(v as Role)}
+        />
       </Field>
-      {role !== "admin" && <ProjectChecks projects={projects} value={projectIds} onChange={setProjectIds} />}
+      {role !== "admin" && (
+        <ProjectChecks
+          projects={projects}
+          value={projectIds}
+          onChange={setProjectIds}
+        />
+      )}
       <Field label="ลิงก์ใช้ได้กี่วัน" hint="ลิงก์ใช้สมัครได้ครั้งเดียว">
         <FormSelect
-          options={[1, 3, 7, 30].map((d) => ({ id: String(d), label: `${d} วัน` }))}
+          options={[1, 3, 7, 30].map((d) => ({
+            id: String(d),
+            label: `${d} วัน`,
+          }))}
           value={String(days)}
           onChange={(v) => setDays(Number(v))}
         />
@@ -369,7 +579,13 @@ export function InviteForm({ projects }: { projects: ProjectOption[] }) {
       <Button full disabled={busy} onClick={create}>
         {busy ? "กำลังสร้างลิงก์" : `สร้างลิงก์เชิญ${ROLE_LABEL[role]}`}
       </Button>
-      {link && <CopyField value={link} label="ลิงก์เชิญ" hint="คัดลอกแล้วส่งทาง LINE ได้เลย ใช้สมัครได้ครั้งเดียว" />}
-    </Card>
+      {link && (
+        <CopyField
+          value={link}
+          label="ลิงก์เชิญ"
+          hint="คัดลอกแล้วส่งทาง LINE ได้เลย ใช้สมัครได้ครั้งเดียว"
+        />
+      )}
+    </Box>
   );
 }

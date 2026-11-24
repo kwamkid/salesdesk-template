@@ -86,6 +86,11 @@ export const DATE_RANGE_PRESETS: DateRangePresetDef[] = [
   },
 ];
 
+/** Shortcuts shown beside the calendar: 7 so the list is as tall as the two months + OK button.
+ *  The rest of the registry still works with getDateRangePreset(). */
+export const PICKER_PRESET_KEYS: DateRangePreset[] = ["today", "last_7_days", "last_30_days", "last_90_days", "this_month", "last_month", "this_year"];
+export const PICKER_PRESETS: DateRangePresetDef[] = DATE_RANGE_PRESETS.filter((p) => PICKER_PRESET_KEYS.includes(p.key));
+
 export function getDateRangePreset(key: DateRangePreset): { from: Date; to: Date } {
   const preset = DATE_RANGE_PRESETS.find((p) => p.key === key);
   if (!preset) throw new Error(`Unknown date range preset "${key}"`);
