@@ -156,8 +156,12 @@ export async function flushMetaEvents(opts?: {
 }
 
 /** The "ทดสอบส่ง" button in Settings. Sends one event with the test event code, so it shows
- *  up only under Test events and never counts in ad results. */
-export async function sendTestEvent(): Promise<{ ok: boolean; message: string }> {
+ *  up only under Test events and never counts in ad results.
+ *  It is sent as a website event on purpose: Events Manager > Test events does not list
+ *  system_generated events (the kind real stage changes use) even though Meta accepts them,
+ *  so a system_generated test would look like a failure. A website event needs the page URL
+ *  and the browser's user agent. */
+export async function sendTestEvent(page: { url: string; userAgent: string }): Promise<{ ok: boolean; message: string }> {
   const db = createAdminClient();
   const cfg = await loadConfig(db);
   if (!cfg) return { ok: false, message: "ยังไม่ได้ใส่ Pixel ID หรือ token ให้ครบ บันทึกทั้งสองช่องก่อนแล้วกดทดสอบอีกครั้ง" };
@@ -174,8 +178,9 @@ export async function sendTestEvent(): Promise<{ ok: boolean; message: string }>
         event_name: "Lead",
         event_time: Math.floor(Date.now() / 1000),
         event_id: `sd-test-${Date.now()}`,
-        action_source: "system_generated",
-        user_data: userData("0800000000", "test@example.com"),
+        action_source: "website",
+        event_source_url: page.url,
+        user_data: { ...userData("0800000000", "test@example.com"), client_user_agent: page.userAgent || "SalesDesk" },
         custom_data: { lead_stage: "new" },
       },
     ],
@@ -184,6 +189,7 @@ export async function sendTestEvent(): Promise<{ ok: boolean; message: string }>
   if (err) return { ok: false, message: `Meta ไม่รับข้อมูล: ${err}` };
   return {
     ok: true,
-    message: "ส่งแล้ว เปิด Events Manager > เลือก Pixel ของบริษัท > Test events จะเห็น event ชื่อ Lead ภายใน 1-2 นาที",
+    message:
+      "Meta รับแล้ว ดูที่ Events Manager > Pixel ของบริษัท > Test events จะเห็น Lead (ต้องเปิดหน้านั้นค้างไว้ก่อนกดส่ง ถ้ายังไม่เห็นให้กดทดสอบอีกครั้ง)",
   };
 }

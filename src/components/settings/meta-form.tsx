@@ -107,7 +107,7 @@ export function MetaForm({
           {test.busy ? "กำลังส่ง" : "ทดสอบส่ง"}
         </Button>
         <p className="text-sm text-ink-soft">
-          ส่ง event ทดสอบ 1 รายการด้วยรหัสทดสอบ แล้วไปดูที่ Events Manager &gt; Test events
+          เปิด Events Manager &gt; Test events (เลือก Website) ค้างไว้ก่อน แล้วกดปุ่มนี้ จะเห็น Lead ขึ้นในหน้านั้น
           <HelpHint align="end">event คือ &quot;เหตุการณ์&quot; ที่ส่งไปบอก Meta เช่น Lead · QualifiedLead · Schedule · Purchase ชื่อที่ใช้กับแต่ละขั้นตั้งได้ในหน้าโครงการ</HelpHint>
         </p>
       </div>

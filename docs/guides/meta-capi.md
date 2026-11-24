@@ -10,11 +10,14 @@
 
 1. เปิด https://business.facebook.com/events_manager2 → เลือก Pixel ของบริษัท
 2. แท็บ **Settings** → คัดลอก **Pixel ID** (ตัวเลข)
-3. หัวข้อ **Conversions API** → **Generate access token** → คัดลอก token (เห็นครั้งเดียว)
-4. แท็บ **Test events** → คัดลอก **Test event code** (เช่น `TEST12345`)
+3. หัวข้อ **Conversions API** → Set up direct integration → เลือก **Set up without Dataset Quality API** → **Generate access token** → คัดลอก token (เห็นครั้งเดียว)
+   - ถ้าเลือกแบบ with Dataset Quality API แล้วขึ้น "Failed to generate access token" ให้เปลี่ยนมาเลือกแบบ without แล้วกดใหม่ ใช้ส่ง event ได้เหมือนกัน
+4. แท็บ **Test events** → เลือกช่องทาง **Website** → เปิดหัวข้อ "Confirm your server's events…" → คัดลอก **test_event_code** (เช่น `TEST12345`) · **เปิดหน้านี้ค้างไว้**
 5. ใน SalesDesk ล็อกอินเป็นแอดมิน → เมนู **ตั้งค่า** → หัวข้อ Meta → วาง Pixel ID, token และ Test event code → บันทึก
-6. กด **ทดสอบส่ง** → กลับไปแท็บ Test events ใน Events Manager ต้องเห็น event ขึ้นภายใน 1 นาที
+6. กด **ทดสอบส่ง** → กลับไปหน้า Test events ที่เปิดค้างไว้ ต้องเห็น **Lead** ขึ้นภายใน 1 นาที (หน้านี้แสดงเฉพาะ event ที่เข้ามาตอนเปิดหน้าอยู่ ไม่เห็นให้กดทดสอบอีกครั้ง)
 7. ใช้จริง: ลบ Test event code ออกจากหน้าตั้งค่า (ถ้าไม่ลบ event จะไปอยู่แค่หน้าทดสอบ)
+
+> ทำไม event จากการเลื่อนขั้นจริงไม่ขึ้นในหน้า Test events: ขั้นของลูกค้าเกิดในระบบหลังบ้าน จึงส่งเป็นแบบ `system_generated` ซึ่ง Meta รับแต่หน้า Test events ไม่แสดง ปุ่มทดสอบส่งจึงส่งแบบหน้าเว็บแทน เพื่อให้เห็นว่า Pixel ID และ token ใช้ได้ ส่วน event จริงดูตามหัวข้อ "ดูว่าส่งสำเร็จไหม" ด้านล่าง
 
 ## ตั้งมูลค่าต่อขั้น
 
@@ -25,7 +28,8 @@
 
 ## ดูว่าส่งสำเร็จไหม
 
-- แอดมิน: เมนู **งานรอ** → หัวข้อ "ส่งข้อมูลไป Meta ไม่สำเร็จ" (กดส่งใหม่ได้)
+- ใน SalesDesk: เลื่อนขั้นลูกค้าแล้ว ถ้า Meta ไม่รับ จะขึ้นที่เมนู **งานรอ** → หัวข้อ "ส่งข้อมูลไป Meta ไม่สำเร็จ" (กดส่งใหม่ได้) · ไม่มีรายการ = Meta รับครบ
+- ใน Meta (หลังลบ Test event code แล้ว): Events Manager → Pixel → แท็บ **Overview** จะเห็นชื่อ event เช่น QualifiedLead ภายในราว 20 นาที ช่อง Received from = Server
 - ระบบส่งซ้ำให้เองทุกเช้า (ถ้าตั้ง cron-job.org แล้ว ดู `docs/guides/notifications.md`)
 
 ## ข้อควรรู้

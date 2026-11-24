@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { STAGES } from "@/config/stages";
 import { getDocument } from "@/documents";
 import { requireMe } from "@/lib/auth";
 import { sendTestEvent } from "@/lib/meta";
+import { originFrom } from "@/lib/origin";
 import { createClient } from "@/lib/supabase/server";
 
 export type ActionResult = { ok: boolean; message?: string };
@@ -61,7 +63,8 @@ export async function saveMetaToken(token: string) {
 
 export async function testMeta(): Promise<ActionResult> {
   await requireMe(["admin"]);
-  const res = await sendTestEvent();
+  const h = await headers();
+  const res = await sendTestEvent({ url: `${originFrom(h)}/settings`, userAgent: h.get("user-agent") ?? "" });
   return { ok: res.ok, message: res.message };
 }
 
