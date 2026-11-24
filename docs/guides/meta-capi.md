@@ -32,12 +32,25 @@
 เมนู **โครงการ** → เลือกโครงการ → หัวข้อ "มูลค่าและ event ต่อขั้น"
 - ใส่มูลค่าของแต่ละขั้น (เช่น นัดชม 5,000 บาท) Meta ใช้เลือกคนที่มีแนวโน้มสร้างมูลค่าสูง
 - ขั้น จอง · ทำสัญญา · โอน ใช้ราคาแปลงที่ลูกค้าจองให้เอง
-- ปิดการส่งขั้นที่ไม่ต้องการได้ · เปลี่ยนชื่อ event ได้ (ค่าเริ่มต้น Lead, QualifiedLead, Schedule, SiteVisit, Reservation, Contract, Purchase)
+- ปิดการส่งขั้นที่ไม่ต้องการได้ · เปลี่ยนชื่อ event ได้
+- ค่าเริ่มต้นเป็นชื่อมาตรฐานของ Meta ทุกขั้น จึงมีคอลัมน์ให้ดูใน Ads Manager (Columns → Customize columns):
+
+| ขั้น | event | คอลัมน์ใน Ads Manager |
+|---|---|---|
+| ลีดใหม่ | Lead | Leads |
+| ลีดคุณภาพ | SubmitApplication | Applications submitted |
+| นัดชม | Schedule | Schedules |
+| มาชมแล้ว | Contact | Contacts |
+| จอง | InitiateCheckout | Checkouts initiated |
+| ทำสัญญา | AddPaymentInfo | Payment info adds |
+| โอน | Purchase | Purchases |
+
+- ถ้าเปลี่ยนเป็นชื่อที่ตั้งเอง (เช่น SiteVisit) Meta ยังรับและใช้ทำ audience ได้ แต่จะไม่มีคอลัมน์ในแอด
 
 ## ดูว่าส่งสำเร็จไหม
 
 - ใน SalesDesk: เลื่อนขั้นลูกค้าแล้ว ถ้า Meta ไม่รับ จะขึ้นที่เมนู **งานรอ** → หัวข้อ "ส่งข้อมูลไป Meta ไม่สำเร็จ" (กดส่งใหม่ได้) · ไม่มีรายการ = Meta รับครบ
-- ใน Meta (หลังลบ Test event code แล้ว): Events Manager → Pixel → แท็บ **Overview** จะเห็นชื่อ event เช่น QualifiedLead ภายในราว 20 นาที ช่อง Received from = Server
+- ใน Meta (หลังลบ Test event code แล้ว): Events Manager → Pixel → แท็บ **Overview** จะเห็นชื่อ event เช่น SubmitApplication ภายในราว 20 นาที ช่อง Received from = Server
 - ระบบส่งซ้ำให้เองทุกเช้า (ถ้าตั้ง cron-job.org แล้ว ดู `docs/guides/notifications.md`)
 
 ## ข้อควรรู้

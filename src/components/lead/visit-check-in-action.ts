@@ -26,7 +26,7 @@ export async function checkInVisit(input: { leadId: string; note: string; nextFo
     return { ok: false, message };
   }
 
-  afterLeadChange(); // Meta "SiteVisit" event and pushes, after the answer is sent
+  afterLeadChange(); // Meta event of the visited stage and pushes, after the answer is sent
   revalidatePath(`/leads/${input.leadId}`);
   return { ok: true, activityId: data as string };
 }

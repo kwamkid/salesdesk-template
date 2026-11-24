@@ -108,7 +108,7 @@ export function MetaForm({
         </Button>
         <p className="text-sm text-ink-soft">
           เปิด Events Manager &gt; Test events (เลือก Website) ค้างไว้ก่อน แล้วกดปุ่มนี้ จะเห็น Lead ขึ้นในหน้านั้น
-          <HelpHint align="end">event คือ &quot;เหตุการณ์&quot; ที่ส่งไปบอก Meta เช่น Lead · QualifiedLead · Schedule · Purchase ชื่อที่ใช้กับแต่ละขั้นตั้งได้ในหน้าโครงการ</HelpHint>
+          <HelpHint align="end">event คือ &quot;เหตุการณ์&quot; ที่ส่งไปบอก Meta เช่น Lead · Schedule · Purchase (ชื่อมาตรฐานของ Meta มีคอลัมน์ให้ดูใน Ads Manager) ชื่อที่ใช้กับแต่ละขั้นตั้งได้ในหน้าโครงการ</HelpHint>
         </p>
       </div>
     </Card>
