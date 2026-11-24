@@ -10,7 +10,7 @@ Stack: Next.js (App Router) on Vercel · Supabase (Postgres, Auth, Storage, Real
 
 - `docs/DESIGN.md` — menus per role, theme, PWA and push, technical rules. Read it before building any page.
 - `supabase/migrations/` — the database, in file-number order. The schema is the source of truth for table and column names. Every list, filter and total already has an RPC there; use it instead of writing a new query.
-- `docs/steps/<step>.md` — when the user says "ทำขั้น X ตาม docs/steps/X.md", read only that file and build only what it asks.
+- `docs/steps/` — one file per page the students build: `1.13-leads.md` (customer list, add lead, customer page, activities) · `1.14-today.md` ("งานของฉันวันนี้") · `2.1-unit-import.md` (import plots from Excel). Students ask in plain words ("ทำหน้าลีดให้หน่อย", "อยากได้หน้างานวันนี้", "ทำหน้านำเข้าแปลง"): open the matching file, read only it, build only what it asks, and say in one line which file you followed.
 - `docs/guides/` — setup guides for people (Supabase, Google login, Vercel, notifications, Meta). Point the user to them instead of re-explaining.
 - `docs/SPEC.md` — what the system does, in business terms.
 
@@ -26,7 +26,7 @@ Stack: Next.js (App Router) on Vercel · Supabase (Postgres, Auth, Storage, Real
 - Drop-in parts for the customer page: `src/components/lead/` (LeadUnits, VisitCheckIn, DocumentsButton, LoanScreeningCard, ActivityPhoto).
 - After a Server Action that adds a lead, logs an activity, changes a stage or reserves a plot, call `afterLeadChange()` from `@/lib/background`.
 
-Pages that show "หน้านี้สร้างในขั้น ..." are placeholders the students build from `docs/steps/`.
+Pages that show "หน้านี้ยังไม่ได้สร้าง" (NotBuiltYet) are placeholders the students build from `docs/steps/`.
 
 ## Rules
 
