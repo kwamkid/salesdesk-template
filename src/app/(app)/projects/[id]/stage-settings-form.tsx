@@ -38,8 +38,14 @@ export function StageSettingsForm({
   const [rows, setRows] = useState<Row[]>(() =>
     EVENT_STAGES.map((stage) => {
       const r = initial.find((i) => i.stage === stage);
-      // no row in the database = send the default event, no value
-      return { stage, value: r?.value == null ? "" : String(r.value), send_event: r?.send_event ?? true, event_name: r?.event_name ?? "" };
+      // no row in the database = send the default event, no value.
+      // The default event name is filled in as real text so people see what is sent; edit it to change.
+      return {
+        stage,
+        value: r?.value == null ? "" : String(r.value),
+        send_event: r?.send_event ?? true,
+        event_name: r?.event_name || DEFAULT_EVENT[stage],
+      };
     }),
   );
   const [msg, setMsg] = useState<{ tone: "ok" | "danger"; text: string } | null>(null);
@@ -54,7 +60,7 @@ export function StageSettingsForm({
         stage: r.stage,
         value: r.value.trim() === "" ? null : Number(r.value.replace(/,/g, "")),
         send_event: r.send_event,
-        event_name: r.event_name,
+        event_name: r.event_name.trim(),
       }));
       if (payload.some((p) => p.value !== null && (Number.isNaN(p.value) || p.value < 0))) {
         setMsg({ tone: "danger", text: "มูลค่าต้องเป็นตัวเลขที่ไม่ติดลบ" });
@@ -73,7 +79,7 @@ export function StageSettingsForm({
         sub={
           <>
             มูลค่าที่ส่งไป Meta เมื่อลูกค้าเข้าขั้นนั้น ขั้นจอง ทำสัญญา และโอน ใช้ราคาแปลงแทน ถ้าลูกค้าผูกกับแปลงแล้ว
-            ช่องชื่อ event ว่างไว้ = ใช้ชื่อมาตรฐาน
+            ชื่อ event ใส่ชื่อมาตรฐานไว้ให้แล้ว แก้ได้ถ้าต้องการ
           </>
         }
       />
@@ -95,13 +101,13 @@ export function StageSettingsForm({
                   มูลค่า (บาท)
                   <HelpHint ariaLabel="มูลค่าคืออะไร">ตัวเลขที่ส่งไปกับ event ให้ Meta รู้ว่าลูกค้าขั้นนี้มีค่าเท่าไร ว่างไว้ = ไม่ส่งมูลค่า</HelpHint>
                 </span>
-                <Input inputMode="decimal" value={r.value} onChange={(e) => set(r.stage, { value: e.target.value })} placeholder="ไม่ระบุ" />
+                <Input inputMode="decimal" value={r.value} onChange={(e) => set(r.stage, { value: e.target.value })} placeholder={PLOT_PRICE_STAGES.includes(r.stage) ? "ใช้ราคาแปลง" : "ไม่ระบุ"} />
               </label>
               <label className="flex flex-col gap-1">
                 <span className="text-xs text-ink-soft">
                   ชื่อ event
                   <HelpHint ariaLabel="ชื่อ event คืออะไร">
-                    ชื่อที่เห็นใน Meta Events Manager ว่างไว้ = ใช้ชื่อมาตรฐาน {DEFAULT_EVENT[r.stage]}
+                    ชื่อที่เห็นใน Meta Events Manager ค่าเริ่มต้นคือ {DEFAULT_EVENT[r.stage]} ลบให้ว่าง = กลับไปใช้ชื่อนี้
                   </HelpHint>
                 </span>
                 <Input
