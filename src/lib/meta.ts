@@ -14,6 +14,8 @@ const BATCH_LIMIT = 50;
 type Admin = ReturnType<typeof createAdminClient>;
 type MetaConfig = { pixel: string; token: string; testCode: string };
 
+type LeadContact = { phone: string; email: string; full_name: string };
+
 type EventRow = {
   id: number;
   stage: string;
@@ -21,7 +23,7 @@ type EventRow = {
   value: number | string | null;
   event_time: string;
   attempts: number;
-  leads: { phone: string; email: string } | { phone: string; email: string }[] | null;
+  leads: LeadContact | LeadContact[] | null;
 };
 
 const sha256 = (s: string) => createHash("sha256").update(s).digest("hex");
@@ -41,12 +43,27 @@ export function phoneLocal(phone: string): string {
   return /^66[0-9]{8,9}$/.test(d) ? `0${d.slice(2)}` : d;
 }
 
-function userData(phone: string, email: string) {
+/** Thai name for Meta matching: drop titles, first word = first name, last word = last name.
+ *  "คุณสมชาย ใจดี" -> { fn: "สมชาย", ln: "ใจดี" }. Meta wants lowercase UTF-8 before hashing. */
+// A Thai title is only removed when no vowel/tone mark follows it, so "คุณากร" stays a name.
+const TITLES = /^(คุณ|นางสาว|นาย|นาง|น\.ส\.|ดร\.|mr\.?|mrs\.?|ms\.?|miss)(?![\u0E30-\u0E3A\u0E47-\u0E4E])\s*/i;
+export function nameForMeta(fullName: string): { fn: string; ln: string } {
+  const words = (fullName ?? "").trim().replace(TITLES, "").toLowerCase().split(/\s+/).filter(Boolean);
+  return { fn: words[0] ?? "", ln: words.length > 1 ? words[words.length - 1] : "" };
+}
+
+/** Hashed customer details Meta uses to find the person. Every lead is in Thailand. */
+function userData(phone: string, email: string, fullName = "") {
   const ph = phoneForMeta(phone);
   const em = (email ?? "").trim().toLowerCase();
-  const out: { ph?: string[]; em?: string[] } = {};
+  const { fn, ln } = nameForMeta(fullName);
+  const out: { ph?: string[]; em?: string[]; fn?: string[]; ln?: string[]; country: string[] } = {
+    country: [sha256("th")],
+  };
   if (ph) out.ph = [sha256(ph)];
   if (em) out.em = [sha256(em)];
+  if (fn) out.fn = [sha256(fn)];
+  if (ln) out.ln = [sha256(ln)];
   return out;
 }
 
@@ -96,7 +113,7 @@ function toEvent(row: EventRow) {
     event_time: Math.floor(new Date(row.event_time).getTime() / 1000),
     event_id: `sd-${row.id}`, // Meta drops a second event with the same id (dedup)
     action_source: "system_generated",
-    user_data: userData(lead?.phone ?? "", lead?.email ?? ""),
+    user_data: userData(lead?.phone ?? "", lead?.email ?? "", lead?.full_name ?? ""),
     custom_data: custom,
   };
 }
@@ -114,7 +131,7 @@ export async function flushMetaEvents(opts?: {
 
   let q = db
     .from("meta_events")
-    .select("id, stage, event_name, value, event_time, attempts, leads(phone, email)")
+    .select("id, stage, event_name, value, event_time, attempts, leads(phone, email, full_name)")
     .order("created_at")
     .order("id")
     .limit(Math.min(Math.max(opts?.limit ?? BATCH_LIMIT, 1), BATCH_LIMIT));
@@ -180,7 +197,7 @@ export async function sendTestEvent(page: { url: string; userAgent: string }): P
         event_id: `sd-test-${Date.now()}`,
         action_source: "website",
         event_source_url: page.url,
-        user_data: { ...userData("0800000000", "test@example.com"), client_user_agent: page.userAgent || "SalesDesk" },
+        user_data: { ...userData("0800000000", "test@example.com", "คุณทดสอบ ระบบ"), client_user_agent: page.userAgent || "SalesDesk" },
         custom_data: { lead_stage: "new" },
       },
     ],
