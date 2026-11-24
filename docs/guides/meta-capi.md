@@ -19,6 +19,14 @@
 
 > ทำไม event จากการเลื่อนขั้นจริงไม่ขึ้นในหน้า Test events: ขั้นของลูกค้าเกิดในระบบหลังบ้าน จึงส่งเป็นแบบ `system_generated` ซึ่ง Meta รับแต่หน้า Test events ไม่แสดง ปุ่มทดสอบส่งจึงส่งแบบหน้าเว็บแทน เพื่อให้เห็นว่า Pixel ID และ token ใช้ได้ ส่วน event จริงดูตามหัวข้อ "ดูว่าส่งสำเร็จไหม" ด้านล่าง
 
+## ผูก Pixel กับบัญชีโฆษณา (ให้ผลไปขึ้นใน Ads Manager)
+
+1. เปิด https://business.facebook.com/settings/pixels → เลือก Pixel ของโครงการ
+2. แท็บ **Connected assets** → **Add assets** → **Ad accounts** → ติ๊กบัญชีที่ใช้ยิงแอดโครงการ → บันทึก
+3. ตอนสร้างแคมเปญ ระดับ ad set ให้เลือก Pixel นี้เป็นตัววัดผล
+
+ในแท็บ **People** ของ Pixel จะมี **Conversions API System User** ที่ Meta สร้างให้เองตอนกด Generate access token — **ห้ามลบ** ถ้าลบ token จะใช้ไม่ได้และ SalesDesk ส่ง event ไม่ผ่าน
+
 ## ตั้งมูลค่าต่อขั้น
 
 เมนู **โครงการ** → เลือกโครงการ → หัวข้อ "มูลค่าและ event ต่อขั้น"
