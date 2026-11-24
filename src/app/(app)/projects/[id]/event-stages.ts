@@ -15,3 +15,18 @@ export const DEFAULT_EVENT: Record<string, string> = {
   contracted: "AddPaymentInfo",
   transferred: "Purchase",
 };
+
+/** Ads Manager column for each Meta standard event (Columns → Customize columns). */
+export const ADS_COLUMN: Record<string, string> = {
+  Lead: "Leads",
+  SubmitApplication: "Applications submitted",
+  Schedule: "Schedules",
+  Contact: "Contacts",
+  InitiateCheckout: "Checkouts initiated",
+  AddPaymentInfo: "Payment info adds",
+  Purchase: "Purchases",
+  CompleteRegistration: "Registrations completed",
+  FindLocation: "Location searches",
+  StartTrial: "Trials started",
+  Subscribe: "Subscriptions",
+};

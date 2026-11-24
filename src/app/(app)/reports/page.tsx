@@ -81,7 +81,7 @@ export default async function ReportsPage({ searchParams }: Props) {
           {boss && (
             <FileCard
               title="รายชื่อสำหรับ Meta"
-              purpose="มีแค่เบอร์และอีเมล ส่งให้ Claude + Meta MCP สร้าง custom audience ได้ทันที"
+              purpose="เบอร์ อีเมล ชื่อ นามสกุล ประเทศ ตามรูปแบบของ Meta อัปโหลดเป็น Customer list ใน Meta Audiences ได้เลย หรือส่งให้ Claude + Meta MCP สร้างให้"
               uses="โครงการ และกลุ่มที่เลือก"
             >
               <Field label="กลุ่มรายชื่อ">
@@ -93,6 +93,13 @@ export default async function ReportsPage({ searchParams }: Props) {
                   ))}
                 </Select>
               </Field>
+              <ul className="flex list-disc flex-col gap-1 pl-5 text-sm text-ink-soft">
+                <li>จองขึ้นไป → ต้นแบบ Lookalike หาคนคล้ายคนที่ซื้อจริง</li>
+                <li>มาชมแล้ว → ยิงแอดซ้ำ เช่น โปรปิดการขาย</li>
+                <li>ไม่มีคุณภาพ · ไม่ซื้อ → ตัดออกจากแอด ไม่เสียเงินซ้ำ</li>
+                <li>ทั้งหมด → ตัดออกจากแอดหาลีดใหม่ (คนที่ทักมาแล้ว)</li>
+                <li>Meta ต้องจับคู่ได้ราว 100 คนขึ้นไปถึงใช้ยิงแอดได้</li>
+              </ul>
               <Download kind="meta" />
             </FileCard>
           )}

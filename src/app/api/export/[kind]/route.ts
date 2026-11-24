@@ -9,6 +9,7 @@ import { activityLabel } from "@/config/activities";
 import type { Role } from "@/config/roles";
 import { stageOf, STAGES } from "@/config/stages";
 import { getMe } from "@/lib/auth";
+import { nameForMeta } from "@/lib/meta";
 import { csvResponse, toCsv, type CsvColumn } from "@/lib/csv";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAllRpc } from "./fetch-all";
@@ -71,7 +72,7 @@ type OverdueRow = {
   owner: string; customer: string; phone: string; project: string; stage: string;
   next_follow_up: string; days_overdue: number; last_note: string | null;
 };
-type MetaRow = { phone: string | null; email: string | null };
+type MetaRow = { phone: string | null; email: string | null; full_name: string | null };
 type PackRow = {
   customer_code: string; project: string; sales: string | null; type: string; note: string | null;
   created_at: string; stage_now: string; lead_created_at: string;
@@ -112,10 +113,14 @@ const overdueCols: CsvColumn<OverdueRow>[] = [
   { header: "โน้ตล่าสุด", value: (r) => r.last_note },
 ];
 
-// Meta's own column names, nothing else.
+// Meta's own customer-list column names, nothing else. Name and country help Meta find more
+// people; Meta hashes them on upload.
 const metaCols: CsvColumn<MetaRow>[] = [
   { header: "phone", value: (r) => r.phone },
   { header: "email", value: (r) => r.email },
+  { header: "fn", value: (r) => nameForMeta(r.full_name ?? "").fn },
+  { header: "ln", value: (r) => nameForMeta(r.full_name ?? "").ln },
+  { header: "country", value: () => "TH" },
 ];
 
 const packCols: CsvColumn<PackRow>[] = [

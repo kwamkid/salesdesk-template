@@ -10,7 +10,7 @@ import { StickyActionBar } from "@/components/ui/sticky-action-bar";
 import { Toggle } from "@/components/ui/toggle";
 import { STAGES, type StageKey } from "@/config/stages";
 import { saveStageSettings, type StageSettingInput } from "../actions";
-import { DEFAULT_EVENT, EVENT_STAGES } from "./event-stages";
+import { ADS_COLUMN, DEFAULT_EVENT, EVENT_STAGES } from "./event-stages";
 
 const PLOT_PRICE_STAGES: StageKey[] = ["reserved", "contracted", "transferred"];
 
@@ -83,6 +83,11 @@ export function StageSettingsForm({
           </>
         }
       />
+      <Notice tone="warn">
+        Meta จับคู่ลูกค้าจากเบอร์ อีเมล และชื่อ ลูกค้าที่จับคู่ได้และกดแอดภายใน 7 วันก่อนเข้าขั้นนั้น จะขึ้นในคอลัมน์ของแอด
+        ตัวเลขในแอดจึงน้อยกว่าใน SalesDesk เป็นปกติ (ตัวอย่างจริง ราว 1 ใน 10) เพราะลูกค้าบางคนไม่ได้มาจากแอด หรือใช้เบอร์ที่ไม่ตรงกับ Facebook
+        ดูตัวเลขครบทุกขั้นที่หน้าภาพรวมของ SalesDesk
+      </Notice>
       {msg && <Notice tone={msg.tone}>{msg.text}</Notice>}
       <ul className="flex flex-col divide-y divide-line">
         {rows.map((r) => {
@@ -116,6 +121,11 @@ export function StageSettingsForm({
                   placeholder={DEFAULT_EVENT[r.stage]}
                   disabled={!r.send_event}
                 />
+                <span className="text-xs text-ink-soft">
+                  {ADS_COLUMN[r.event_name.trim() || DEFAULT_EVENT[r.stage]]
+                    ? `คอลัมน์ใน Ads Manager: ${ADS_COLUMN[r.event_name.trim() || DEFAULT_EVENT[r.stage]]}`
+                    : "ชื่อที่ตั้งเอง ไม่มีคอลัมน์ในแอด (ใช้ทำ audience ได้)"}
+                </span>
               </label>
               <div className="flex items-center gap-2 text-sm">
                 <Toggle
