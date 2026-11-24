@@ -1,0 +1,300 @@
+@import "tailwindcss";
+
+/* Dark mode follows <html data-theme="dark"> (set before paint by the script in src/app/layout.tsx),
+   not the system setting directly, so `dark:` classes and the variables below always agree. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ------------------------------------------------------------------
+   THEME — the only place colors, font and sizes are defined.
+   Change a value here and the whole app follows.
+   Never write a color or a font size directly in a page.
+   Look and values copied from aoocommerce (white sidebar, gray-50 page, orange accent).
+   ------------------------------------------------------------------ */
+:root {
+  color-scheme: light;
+
+  /* Brand color. White text on it must reach 4.5:1 contrast
+     (check at https://webaim.org/resources/contrastchecker/).
+     #C2410C = aoocommerce's accent ink (5.2:1 with white). aoo's button orange #F4511E is only 3.6:1. */
+  --brand: #c2410c;
+  --brand-hover: #9a3412;
+  --brand-ink: #ffffff; /* text on --brand */
+  --brand-soft: #fff7ed; /* light tint of the brand, for selected rows */
+
+  --ink: #111827; /* main text (gray-900) */
+  --ink-soft: #4b5563; /* secondary text (gray-600) */
+  --surface: #ffffff; /* card background */
+  --bg: #f9fafb; /* app background (gray-50) */
+  --line: #e5e7eb; /* dividers, card borders (gray-200) */
+  --line-strong: #d1d5db; /* input and secondary button borders (gray-300) */
+
+  --ok: #1f6b45; /* success, closed-won stages */
+  --ok-soft: #e3f1e9;
+  --warn: #e0a100; /* follow up today */
+  --warn-soft: #fbf1d0;
+  --warn-ink: #5c4300; /* text on --warn-soft */
+  --danger: #b3261e; /* overdue, delete */
+  --danger-ink: #ffffff; /* text on --danger */
+  --danger-soft: #f9e3e1;
+  /* Extra soft tints for icon badges and stat tiles (text color on its own -soft background) */
+  --info: #1d4ed8;
+  --info-soft: #eff6ff;
+  --purple: #6d28d9;
+  --purple-soft: #f5f3ff;
+
+  /* App shell: sidebar, top bar, tooltips */
+  --sidebar: #ffffff;
+  --sidebar-ink: #4b5563; /* menu text */
+  --sidebar-ink-hover: #111827;
+  --sidebar-hover: #f3f4f6;
+  --sidebar-active: #fff7ed; /* current page row */
+  --sidebar-active-ink: #c2410c;
+  --sidebar-title: #6b7280; /* group headers */
+  --header: #ffffff;
+  --tooltip: #111827;
+  --tooltip-ink: #ffffff;
+  --card-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --scrollbar-track: #f3f4f6;
+  --scrollbar-thumb: #9ca3af;
+
+  /* Base size. Every other size is a ratio of this one. */
+  font-size: 16px;
+}
+
+/* Dark mode: same variables, different values (aoocommerce's slate palette).
+   The brand turns lighter so it reads as text on dark; text on a brand button turns dark. */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --brand: #f97316;
+  --brand-hover: #fb923c;
+  --brand-ink: #111827;
+  --brand-soft: #33201f;
+  --ink: #f1f5f9;
+  --ink-soft: #94a3b8;
+  --surface: #1e293b;
+  --bg: #020617;
+  --line: #334155;
+  --line-strong: #475569;
+  --ok: #5fbf8f;
+  --ok-soft: #173326;
+  --warn: #e0a100;
+  --warn-soft: #3a2f0c;
+  --warn-ink: #f3d77a;
+  --danger: #f0736b;
+  --danger-ink: #1a0605;
+  --danger-soft: #3d1a17;
+  --info: #93c5fd;
+  --info-soft: #172554;
+  --purple: #c4b5fd;
+  --purple-soft: #2e1065;
+
+  --sidebar: #0f172a;
+  --sidebar-ink: #cbd5e1;
+  --sidebar-ink-hover: #ffffff;
+  --sidebar-hover: #1e293b;
+  --sidebar-active: #33201f;
+  --sidebar-active-ink: #fdba74;
+  --sidebar-title: #94a3b8;
+  --header: #0f172a;
+  --tooltip: #f1f5f9;
+  --tooltip-ink: #0f172a;
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --scrollbar-track: #1e293b;
+  --scrollbar-thumb: #475569;
+}
+
+@theme inline {
+  --font-sans: var(--font-app), system-ui, sans-serif;
+
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-surface: var(--surface);
+  --color-bg: var(--bg);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-warn-ink: var(--warn-ink);
+  --color-danger: var(--danger);
+  --color-danger-ink: var(--danger-ink);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-purple: var(--purple);
+  --color-purple-soft: var(--purple-soft);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-ink: var(--sidebar-ink);
+  --color-sidebar-ink-hover: var(--sidebar-ink-hover);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-ink: var(--sidebar-active-ink);
+  --color-sidebar-title: var(--sidebar-title);
+  --color-header: var(--header);
+  --color-tooltip: var(--tooltip);
+  --color-tooltip-ink: var(--tooltip-ink);
+
+  --shadow-card: var(--card-shadow);
+
+  /* Type scale (rem of the 16px base) */
+  --text-xs: 0.75rem; /* 12px labels, time */
+  --text-sm: 0.875rem; /* 14px secondary text */
+  --text-base: 1rem; /* 16px body text and every input */
+  --text-lg: 1.125rem; /* 18px card title */
+  --text-xl: 1.375rem; /* 22px section title */
+  --text-2xl: 1.75rem; /* 28px dashboard numbers */
+  /* Page title, like aoocommerce's heading-1: 24px on phones, 30px from 640px */
+  --text-page: 1.5rem;
+  --text-page--line-height: 2rem;
+  --text-page-lg: 1.875rem;
+  --text-page-lg--line-height: 2.25rem;
+
+  /* Shape (aoocommerce: cards and buttons 8px). Spacing uses Tailwind steps 1 2 3 4 5 6 8 = 4 8 12 16 20 24 32px. */
+  --radius-card: 0.5rem;
+  --radius-control: 0.5rem;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+/* Inputs stay at 16px so iPhone does not zoom the page when a field is tapped. */
+input,
+select,
+textarea {
+  font-size: 1rem;
+}
+
+/* Tailwind 4 no longer shows the hand cursor on buttons. Bring it back everywhere. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+summary,
+label:has(input[type="checkbox"]),
+select {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Scrollbars (aoocommerce) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+}
+* {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-width: thin;
+}
+
+/* ------------------------------------------------------------------
+   Sidebar icon rail (from 768px). <html data-sidebar="collapsed"> is set before paint
+   by the script in src/app/layout.tsx and by the toggle, so the width never jumps.
+   Labels hide; a label shows as a tooltip on hover or keyboard focus (aoocommerce globals.css).
+   ------------------------------------------------------------------ */
+.sidebar-panel .nav-expand-rail {
+  display: none;
+}
+@media (min-width: 768px) {
+  [data-sidebar="collapsed"] .sidebar-panel .nav-collapse-top {
+    display: none;
+  }
+  [data-sidebar="collapsed"] .sidebar-panel .nav-expand-rail {
+    display: flex;
+  }
+  [data-sidebar="collapsed"] .sidebar-panel {
+    width: 4.25rem; /* 68px */
+  }
+  [data-sidebar="collapsed"] .sidebar-panel .nav-label,
+  [data-sidebar="collapsed"] .sidebar-panel .nav-section-title,
+  [data-sidebar="collapsed"] .sidebar-panel .nav-logo-name {
+    display: none;
+  }
+  [data-sidebar="collapsed"] .sidebar-panel .nav-logo {
+    justify-content: center;
+    padding-left: 0;
+  }
+  [data-sidebar="collapsed"] .sidebar-panel nav a {
+    position: relative;
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  [data-sidebar="collapsed"] .sidebar-panel nav a:hover .nav-label,
+  [data-sidebar="collapsed"] .sidebar-panel nav a:focus-visible .nav-label {
+    display: block;
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 10px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    background: var(--tooltip);
+    color: var(--tooltip-ink);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    white-space: nowrap;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+    z-index: 60;
+    pointer-events: none;
+  }
+  /* The rail must not clip the tooltip */
+  [data-sidebar="collapsed"] .sidebar-panel nav {
+    overflow: visible;
+  }
+}
+
+/* Small tooltip for icon buttons (collapse toggle, theme toggle): <span class="hint">…</span> inside the button */
+.has-hint {
+  position: relative;
+}
+.has-hint .hint {
+  display: none;
+}
+@media (hover: hover) {
+  .has-hint:hover .hint,
+  .has-hint:focus-visible .hint {
+    display: block;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 6px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    background: var(--tooltip);
+    color: var(--tooltip-ink);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    white-space: nowrap;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+    z-index: 60;
+    pointer-events: none;
+  }
+}
+.has-hint .hint-right {
+  top: 50% !important;
+  left: 100% !important;
+  transform: translateY(-50%) !important;
+  margin-top: 0 !important;
+  margin-left: 8px;
+}

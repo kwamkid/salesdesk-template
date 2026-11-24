@@ -1,0 +1,289 @@
+{
+ "image": "site-plan-sample.png",
+ "width": 1024,
+ "height": 725,
+ "pins": [
+  {
+   "plot": "B21",
+   "x": 0.0957,
+   "y": 0.2428,
+   "source": "ocr"
+  },
+  {
+   "plot": "B22",
+   "x": 0.1016,
+   "y": 0.3614,
+   "source": "manual"
+  },
+  {
+   "plot": "B23",
+   "x": 0.1055,
+   "y": 0.4524,
+   "source": "ocr"
+  },
+  {
+   "plot": "B24",
+   "x": 0.1094,
+   "y": 0.5476,
+   "source": "manual"
+  },
+  {
+   "plot": "B25",
+   "x": 0.1133,
+   "y": 0.6386,
+   "source": "ocr"
+  },
+  {
+   "plot": "B26",
+   "x": 0.1182,
+   "y": 0.7283,
+   "source": "ocr"
+  },
+  {
+   "plot": "B27",
+   "x": 0.125,
+   "y": 0.84,
+   "source": "manual"
+  },
+  {
+   "plot": "B20",
+   "x": 0.2012,
+   "y": 0.2538,
+   "source": "manual"
+  },
+  {
+   "plot": "B19",
+   "x": 0.2051,
+   "y": 0.3476,
+   "source": "ocr"
+  },
+  {
+   "plot": "B18",
+   "x": 0.209,
+   "y": 0.4414,
+   "source": "ocr"
+  },
+  {
+   "plot": "B17",
+   "x": 0.2129,
+   "y": 0.5324,
+   "source": "manual"
+  },
+  {
+   "plot": "B16",
+   "x": 0.2168,
+   "y": 0.6262,
+   "source": "manual"
+  },
+  {
+   "plot": "B15",
+   "x": 0.2207,
+   "y": 0.7186,
+   "source": "manual"
+  },
+  {
+   "plot": "B14",
+   "x": 0.2256,
+   "y": 0.811,
+   "source": "manual"
+  },
+  {
+   "plot": "B08",
+   "x": 0.2695,
+   "y": 0.2993,
+   "source": "manual"
+  },
+  {
+   "plot": "B09",
+   "x": 0.2744,
+   "y": 0.4221,
+   "source": "manual"
+  },
+  {
+   "plot": "B10",
+   "x": 0.2783,
+   "y": 0.5172,
+   "source": "ocr"
+  },
+  {
+   "plot": "B11",
+   "x": 0.2822,
+   "y": 0.6083,
+   "source": "manual"
+  },
+  {
+   "plot": "B12",
+   "x": 0.2861,
+   "y": 0.7021,
+   "source": "ocr"
+  },
+  {
+   "plot": "B13",
+   "x": 0.29,
+   "y": 0.7959,
+   "source": "ocr"
+  },
+  {
+   "plot": "B07",
+   "x": 0.3682,
+   "y": 0.2262,
+   "source": "manual"
+  },
+  {
+   "plot": "B06",
+   "x": 0.3721,
+   "y": 0.3186,
+   "source": "manual"
+  },
+  {
+   "plot": "B05",
+   "x": 0.376,
+   "y": 0.4124,
+   "source": "manual"
+  },
+  {
+   "plot": "B04",
+   "x": 0.3809,
+   "y": 0.5062,
+   "source": "manual"
+  },
+  {
+   "plot": "B03",
+   "x": 0.3848,
+   "y": 0.5986,
+   "source": "manual"
+  },
+  {
+   "plot": "B02",
+   "x": 0.3896,
+   "y": 0.6924,
+   "source": "ocr"
+  },
+  {
+   "plot": "B01",
+   "x": 0.3945,
+   "y": 0.7848,
+   "source": "manual"
+  },
+  {
+   "plot": "A15",
+   "x": 0.4375,
+   "y": 0.2566,
+   "source": "manual"
+  },
+  {
+   "plot": "A16",
+   "x": 0.4414,
+   "y": 0.3821,
+   "source": "manual"
+  },
+  {
+   "plot": "A17",
+   "x": 0.4463,
+   "y": 0.4759,
+   "source": "manual"
+  },
+  {
+   "plot": "A18",
+   "x": 0.4502,
+   "y": 0.5683,
+   "source": "manual"
+  },
+  {
+   "plot": "A19",
+   "x": 0.4541,
+   "y": 0.6621,
+   "source": "ocr"
+  },
+  {
+   "plot": "A20",
+   "x": 0.459,
+   "y": 0.7545,
+   "source": "manual"
+  },
+  {
+   "plot": "A14",
+   "x": 0.54,
+   "y": 0.2772,
+   "source": "manual"
+  },
+  {
+   "plot": "A13",
+   "x": 0.5439,
+   "y": 0.371,
+   "source": "manual"
+  },
+  {
+   "plot": "A12",
+   "x": 0.5479,
+   "y": 0.4648,
+   "source": "manual"
+  },
+  {
+   "plot": "A11",
+   "x": 0.5527,
+   "y": 0.5586,
+   "source": "manual"
+  },
+  {
+   "plot": "A10",
+   "x": 0.5566,
+   "y": 0.6497,
+   "source": "manual"
+  },
+  {
+   "plot": "A09",
+   "x": 0.5605,
+   "y": 0.7421,
+   "source": "manual"
+  },
+  {
+   "plot": "A04",
+   "x": 0.6055,
+   "y": 0.3393,
+   "source": "ocr"
+  },
+  {
+   "plot": "A05",
+   "x": 0.6133,
+   "y": 0.4593,
+   "source": "manual"
+  },
+  {
+   "plot": "A06",
+   "x": 0.6172,
+   "y": 0.5531,
+   "source": "manual"
+  },
+  {
+   "plot": "A07",
+   "x": 0.6211,
+   "y": 0.6455,
+   "source": "manual"
+  },
+  {
+   "plot": "A08",
+   "x": 0.625,
+   "y": 0.7393,
+   "source": "manual"
+  },
+  {
+   "plot": "A03",
+   "x": 0.6953,
+   "y": 0.2483,
+   "source": "manual"
+  },
+  {
+   "plot": "A02",
+   "x": 0.709,
+   "y": 0.3448,
+   "source": "manual"
+  },
+  {
+   "plot": "A01",
+   "x": 0.7158,
+   "y": 0.4497,
+   "source": "manual"
+  }
+ ]
+}

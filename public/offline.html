@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>ออฟไลน์อยู่</title>
+    <!-- Shown by public/sw.js when there is no signal and the page was never opened before.
+         Uses system colors only, so it follows light and dark mode without a hex value. -->
+    <style>
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: system-ui, sans-serif;
+        background: Canvas;
+        color: CanvasText;
+        text-align: center;
+        padding: 24px;
+        box-sizing: border-box;
+      }
+      main { max-width: 22rem; }
+      img { width: 4rem; height: 4rem; }
+      h1 { font-size: 1.375rem; margin: 16px 0 8px; }
+      p { font-size: 1rem; margin: 0 0 24px; opacity: 0.8; }
+      button {
+        min-height: 44px;
+        padding: 0 16px;
+        font: inherit;
+        border-radius: 8px;
+        border: 1px solid GrayText;
+        background: ButtonFace;
+        color: ButtonText;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/icons/icon-192.png" alt="" />
+      <h1>ออฟไลน์อยู่</h1>
+      <p>ออฟไลน์อยู่ ข้อมูลล่าสุดที่โหลดไว้ยังดูได้ กลับไปหน้าที่เคยเปิด หรือรอสัญญาณแล้วลองใหม่</p>
+      <button type="button" onclick="location.reload()">ลองใหม่</button>
+    </main>
+  </body>
+</html>
